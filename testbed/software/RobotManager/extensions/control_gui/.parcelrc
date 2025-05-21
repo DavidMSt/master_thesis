@@ -1,0 +1,12 @@
+{
+  "extends": "@parcel/config-default",
+  "transformers": {
+    "*.js": [
+      "@parcel/transformer-babel",
+      "..."
+    ],
+    "*.vue": [
+      "@parcel/transformer-vue"
+    ]
+  }
+}

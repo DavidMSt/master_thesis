@@ -1,6 +1,7 @@
 import numpy as np
 
 from robot.bilbo import BILBO
+from robot.dynamics.tests.sys_id import estimate_system_and_lifted_matrix
 from robot.experiment.bilbo_experiment import BILBO_Trajectory
 
 
@@ -27,6 +28,8 @@ def run_system_identification(bilbo: BILBO, trials, duration, frequencies, gains
         # TODO: Add waiting for a resume signal
         if wait_for_resume:
             ...
+
+            estimate_system_and_lifted_matrix()
 
         data = bilbo.experiment_handler.runTrajectory(trajectory, signals='lowlevel.estimation.state.theta')
         learning_outputs.append(np.asarray(data['output']['lowlevel.estimation.state.theta']))

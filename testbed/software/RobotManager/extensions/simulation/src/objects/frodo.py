@@ -139,6 +139,20 @@ class FRODO_DynamicAgent(core.agents.DynamicAgent):
     def input(self, value):
         self._input = self.input_space.map(value)
 
+    def setPosition(self, x=None, y=None, *args, **kwargs):
+        if isinstance(x, list):
+            x, y = x[0], x[1]
+        super().setPosition([x,y])
+
+    def getPosition(self):
+        return [self.configuration_global['pos']['x'], self.configuration_global['pos']['y'] ]
+
+    def getOrientation(self):
+        return self.configuration['psi'].value
+
+    def setOrientation(self, psi):
+        super().setConfiguration(dimension='psi', value=psi)
+
     def _control(self):
         self.dynamics.input = self.input
 

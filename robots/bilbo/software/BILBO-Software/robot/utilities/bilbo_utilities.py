@@ -9,7 +9,6 @@ class BILBO_Utilities_Events:
     resume: ConditionEvent
 
 
-
 # ======================================================================================================================
 class BILBO_Utilities:
     sound_system: SoundSystem
@@ -18,7 +17,7 @@ class BILBO_Utilities:
         hardware_definition = get_hardware_definition()
 
         if hardware_definition['electronics']['sound']['active']:
-            self.sound_system = SoundSystem(hardware_definition['electronics']['sound']['gain']*0.2)
+            self.sound_system = SoundSystem(hardware_definition['electronics']['sound']['gain'] * 0.2)
         else:
             self.sound_system = None
 

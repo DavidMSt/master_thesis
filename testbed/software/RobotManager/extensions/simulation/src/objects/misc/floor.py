@@ -126,9 +126,9 @@ def generateTileFloor(world: World, tiles=None, tile_size=None, origin: str = 'c
     :return:
     '''
     # Case 1: World Size + Number of Tiles given
-    if tile_size is None and tiles is not None and world.size is not None:
-        size_x = world.size['pos']['x']
-        size_y = world.size['pos']['y']
+    if tile_size is None and tiles is not None and world.width is not None:
+        size_x = world.width['pos']['x']
+        size_y = world.width['pos']['y']
 
         tile_size_x = (size_x[1] - size_x[0]) / tiles[0]
         tile_size_y = (size_y[1] - size_y[0]) / tiles[1]
@@ -160,7 +160,7 @@ def generateTileFloor(world: World, tiles=None, tile_size=None, origin: str = 'c
                            tile_number=tiles)
         return floor
 
-    elif tile_size is not None and world.size is not None:
+    elif tile_size is not None and world.width is not None:
         if isinstance(tile_size, (float, int)):
             tile_size = [tile_size, tile_size]
 
@@ -169,11 +169,11 @@ def generateTileFloor(world: World, tiles=None, tile_size=None, origin: str = 'c
         # assert ((world.size['pos']['y'][1] - world.size['pos']['y'][0]) % tile_size[1] == 0)
 
         # Calculate the number of tiles
-        tiles_x = int((world.size['pos']['x'][1] - world.size['pos']['x'][0]) / tile_size[0])
-        tiles_y = int((world.size['pos']['y'][1] - world.size['pos']['y'][0]) / tile_size[1])
+        tiles_x = int((world.width['pos']['x'][1] - world.width['pos']['x'][0]) / tile_size[0])
+        tiles_y = int((world.width['pos']['y'][1] - world.width['pos']['y'][0]) / tile_size[1])
 
         # Generate the floor
-        floor = TiledFloor(world=world, dimensions={'x': world.size['pos']['x'], 'y': world.size['pos']['y']},
+        floor = TiledFloor(world=world, dimensions={'x': world.width['pos']['x'], 'y': world.width['pos']['y']},
                            tile_size=[tile_size[0], tile_size[1]], tile_number=[tiles_x, tiles_y])
 
         return floor

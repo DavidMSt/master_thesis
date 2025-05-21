@@ -166,7 +166,7 @@ class BILBO_Manager:
 
         self.robots[robot.device.information.device_id] = robot
 
-        self.cli_command_set.addChild(robot.cli_command_set)
+        self.cli_command_set.addChild(robot.interfaces.cli_command_set)
 
         logger.info(f"New Robot connected with ID: \"{robot.device.information.device_id}\"")
 
@@ -189,7 +189,7 @@ class BILBO_Manager:
         logger.warning(f"Robot {device.information.device_id} disconnected")
 
         # Remove the CLI Command Set
-        self.cli_command_set.removeChild(robot.cli_command_set)
+        self.cli_command_set.removeChild(robot.interfaces.cli_command_set)
 
         for callback in self.callbacks.robot_disconnected:
             callback(robot, *args, **kwargs)

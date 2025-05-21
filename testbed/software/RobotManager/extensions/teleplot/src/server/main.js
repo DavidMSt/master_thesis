@@ -1,6 +1,6 @@
 const UDP_PORT = 47269;
 const CMD_UDP_PORT = 47268;
-const HTTP_WS_PORT = 8080;
+const HTTP_WS_PORT = 9000;
 const requestDelay = 50;// every requestDelay milliseconds, we send a websocket packet 
 
 const { Console } = require('console');

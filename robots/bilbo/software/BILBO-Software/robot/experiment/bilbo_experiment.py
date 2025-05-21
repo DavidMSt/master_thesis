@@ -9,7 +9,7 @@ from numpy.core.defchararray import isnumeric
 from robot.communication.bilbo_communication import BILBO_Communication
 from robot.communication.serial.bilbo_serial_messages import BILBO_Sequencer_Event_Message
 from robot.control.bilbo_control import BILBO_Control
-from robot.control.definitions import BILBO_Control_Mode
+from robot.control.bilbo_control_data import BILBO_Control_Mode
 from robot.lowlevel.stm32_general import MAX_STEPS_TRAJECTORY, LOOP_TIME_CONTROL
 from robot.lowlevel.stm32_sequencer import bilbo_sequence_input_t, bilbo_sequence_description_t, BILBO_Sequence_LL
 import robot.lowlevel.stm32_addresses as addresses
@@ -114,7 +114,6 @@ class BILBO_ExperimentHandler:
         self.communication.serial.callbacks.event.register(self._sequencer_event_callback,
                                                            parameters={'messages': [BILBO_Sequencer_Event_Message]})
 
-
         self.communication.wifi.addCommand(
             identifier='runTrajectory',
             arguments=[
@@ -133,12 +132,13 @@ class BILBO_ExperimentHandler:
             ],
             callback=self._run_trajectory_external,
             description='Run a trajectory',
-            execute_in_thread = True
+            execute_in_thread=True
         )
 
     # ------------------------------------------------------------------------------------------------------------------
     def init(self, logging):
         self.logging = logging
+
     # ------------------------------------------------------------------------------------------------------------------
     def loadTrajectoryFromFile(self) -> BILBO_Trajectory:
         ...
@@ -248,7 +248,6 @@ class BILBO_ExperimentHandler:
         if signals is not None and not isinstance(signals, list):
             signals = [signals]
 
-
         logger.info(f"Running trajectory {trajectory.id} ...")
 
         # Set the trajectory data in the LL Module
@@ -293,7 +292,7 @@ class BILBO_ExperimentHandler:
             return None
 
         # Wait for the logger to reach the number of samples
-        while self.logging.sample_index < (end_tick+100):
+        while self.logging.sample_index < (end_tick + 100):
             time.sleep(0.1)
 
         output_signals = {}
@@ -316,7 +315,8 @@ class BILBO_ExperimentHandler:
                                           data={
                                               'event': 'finished',
                                               'trajectory_id': trajectory.id,
-                                              'input': [[float(inp.left), float(inp.right)] for inp in trajectory.inputs.values()],
+                                              'input': [[float(inp.left), float(inp.right)] for inp in
+                                                        trajectory.inputs.values()],
                                               'output': output_signals,
                                           })
 
@@ -457,8 +457,8 @@ class BILBO_ExperimentHandler:
                 input_left = float(input[0])
                 input_right = float(input[1])
             else:
-                input_left = float(input)/2
-                input_right = float(input)/2
+                input_left = float(input) / 2
+                input_right = float(input) / 2
 
             trajectory_inputs[i] = BILBO_TrajectoryInput(
                 step=i,
@@ -474,7 +474,6 @@ class BILBO_ExperimentHandler:
         if signals is not None and not isinstance(signals, list):
             signals = [signals]
 
-
         trajectory = BILBO_Trajectory(
             id=trajectory_id,
             name='test',
@@ -485,7 +484,6 @@ class BILBO_ExperimentHandler:
         )
 
         self.runTrajectory(trajectory, signals=signals)
-
 
     # ------------------------------------------------------------------------------------------------------------------
     def _sequencer_event_callback(self, message: BILBO_Sequencer_Event_Message, *args, **kwargs):

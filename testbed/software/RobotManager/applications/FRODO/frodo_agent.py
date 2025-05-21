@@ -55,7 +55,6 @@ class FRODO_Agent:
 
     _last_update_time: float = 0
 
-    read_timer: PrecisionTimer
 
     def __init__(self, id: str, robot: Frodo):
         self.id = id
@@ -65,8 +64,6 @@ class FRODO_Agent:
         self.measurements = FRODO_Measurement_Data()
         self._last_update_time = 0
 
-        # self.read_timer = PrecisionTimer(timeout=1, repeat=True, callback=self.readRobotData)
-        # self.read_timer.start()
 
         self.robot.callbacks.stream.register(self._robot_stream_callback)
         # Buffer to hold high-frequency state measurements: each element is (timestamp, FRODO_State)
@@ -167,4 +164,3 @@ class FRODO_Agent:
     # ------------------------------------------------------------------------------------------------------------------
     def __del__(self):
         print(f"Deleting agent {self.id}")
-        self.read_timer.stop()

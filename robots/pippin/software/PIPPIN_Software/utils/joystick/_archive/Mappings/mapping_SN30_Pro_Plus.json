@@ -1,0 +1,14 @@
+{
+  "B": 0,
+  "A": 1,
+  "Y": 2,
+  "X": 3,
+  "L1": 4,
+  "R1": 5,
+  "L3_horizontal": 0,
+  "L3_vertical": 1,
+  "R3_horizontal": 2,
+  "R3_vertical": 3,
+  "L2": 4,
+  "R2": 5
+}

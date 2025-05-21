@@ -158,7 +158,8 @@ class TCP_Socket:
         """
         self._exit = True
         self.connected = False
-        self._thread.join()
+        if hasattr(self, '_thread') and self._thread is not None and self._thread.is_alive():
+            self._thread.join()
 
     # ------------------------------------------------------------------------------------------------------------------
     def send(self, data):

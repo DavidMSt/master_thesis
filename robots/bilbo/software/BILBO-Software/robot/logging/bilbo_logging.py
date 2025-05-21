@@ -3,6 +3,7 @@ from copy import copy
 from datetime import datetime
 import threading
 
+from core.utils.delayed_executor import delayed_execution
 # === OWN PACKAGES =====================================================================================================
 from robot.communication.bilbo_communication import BILBO_Communication
 from robot.control.bilbo_control import BILBO_Control
@@ -21,6 +22,8 @@ from core.utils.dataclass_utils import from_dict, asdict_optimized
 from core.utils.time import PerformanceTimer, TimeoutTimer
 from core.utils.logging_utils import Logger
 from core.utils.h5 import H5PyDictLogger
+from core.utils.exit import register_exit_callback
+from core.utils.delayed_executor import delayed_execution
 
 logger = Logger("Logging")
 logger.setLevel('DEBUG')
@@ -74,32 +77,35 @@ class BILBO_Logging:
         self.comm.spi.callbacks.rx_samples.register(self._stm32samples_callback)
         self.sample = BILBO_Sample()
 
-        self._sample_timeout_timer = TimeoutTimer(timeout_time=1, timeout_callback=self._sample_timeout_callback)
+        self._sample_timeout_timer = TimeoutTimer(timeout_time=2, timeout_callback=self._sample_timeout_callback)
 
         self._h5Logger = H5PyDictLogger(filename='log.h5')
         self._csvLogger = CSVLogger()
         self._num_samples = 0
         self.sample_index = None
 
+        register_exit_callback(self.close, priority=2)
+
         self._sample_buffer = None
         self._index_sample_buffer = 0
         self._first_sample_received = False
+        self._startup_phase = True  # Tracks if the logging is still in the startup phase, because in here it might be
+        self._running = False
+        # throwing warnings
         self._dict_cache = None
         self._dict_cache_ll = None
         self._sample_deepcopy_cache = None
         self._sample_buffer_ll = []
         self._lock = threading.Lock()  # Lock to ensure thread-safe access to the ring buffer.
         self._samples_queue = deque()  # Queue for low-level sample batches.
-
     # === METHODS ======================================================================================================
     def init(self) -> None:
         self._build_sample_buffer()
 
     # ------------------------------------------------------------------------------------------------------------------
     def start(self) -> None:
-        # self._sample_timeout_timer.start()
-        ...
-
+        delayed_execution(lambda: setattr(self, '_startup_phase', False), 1)
+        self._running = True
     # ------------------------------------------------------------------------------------------------------------------
     def getNumSamples(self):
         return self._num_samples
@@ -197,8 +203,17 @@ class BILBO_Logging:
         self._csvLogger.close()
         logger.debug("Stop file logging")
 
+    def close(self, *args, **kwargs) -> None:
+        self._h5Logger.close()
+        self._sample_timeout_timer.close()
+        self._running = False
+        logger.info("Logging closed")
+
     # ------------------------------------------------------------------------------------------------------------------
     def update(self) -> None:
+
+        if not self._running:
+            return
 
         self._sample_timeout_timer.reset()
 
@@ -210,13 +225,10 @@ class BILBO_Logging:
         if self.comm.wifi.connected:
             self.comm.wifi.sendStream(sample)
 
-
-        batches = 0
         # Process all available low-level sample batches from the queue.
         while True:
             try:
                 batch = self._samples_queue.popleft()
-                batches += 1
             except IndexError:
                 break
 
@@ -243,18 +255,22 @@ class BILBO_Logging:
 
             if self.sample_index is None:
                 self._sample_timeout_timer.start()
-                self.sample_index = from_dict(BILBO_Sample, self._sample_buffer[self._index_sample_buffer - 1]).lowlevel.general.tick
+                self.sample_index = from_dict(BILBO_Sample,
+                                              self._sample_buffer[self._index_sample_buffer - 1]).lowlevel.general.tick
 
                 # Check if the sample index started at 0
                 if self.sample_index != SAMPLE_BUFFER_LL_SIZE - 1:
-                    logger.warning(f"Sample index started at {self.sample_index - SAMPLE_BUFFER_LL_SIZE + 1} instead of 0")
+                    logger.warning(
+                        f"Sample index started at {self.sample_index - SAMPLE_BUFFER_LL_SIZE + 1} instead of 0")
                 else:
                     logger.debug("Logging started with sample index 0")
             else:
                 self.sample_index += SAMPLE_BUFFER_LL_SIZE
 
-            if self.sample_index != from_dict(BILBO_Sample, self._sample_buffer[self._index_sample_buffer - 1]).lowlevel.general.tick:
-                logger.warning(f"Sample index mismatch: HL: {self.sample_index} != LL: {from_dict(BILBO_Sample, self._sample_buffer[self._index_sample_buffer - 1]).lowlevel.general.tick}")
+            if self.sample_index != from_dict(BILBO_Sample,
+                                              self._sample_buffer[self._index_sample_buffer - 1]).lowlevel.general.tick:
+                logger.warning(
+                    f"Sample index mismatch: HL: {self.sample_index} != LL: {from_dict(BILBO_Sample, self._sample_buffer[self._index_sample_buffer - 1]).lowlevel.general.tick}")
 
             self._num_samples += SAMPLE_BUFFER_LL_SIZE
 
@@ -265,7 +281,7 @@ class BILBO_Logging:
 
         elapsed_time = timer.stop()
 
-        if elapsed_time > 0.1:
+        if elapsed_time > 0.1 and not self._startup_phase:
             logger.warning(f"Logging took {elapsed_time:.2f}s")
 
     # ------------------------------------------------------------------------------------------------------------------

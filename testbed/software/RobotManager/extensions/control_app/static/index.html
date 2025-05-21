@@ -100,8 +100,10 @@
 
     </div>
 </div>
-<div id="pageIndicators"></div>
-<div id="pathBar"></div>
+<div id="pathBar">
+    <span id="pathText">Path: …</span>
+    <div id="pageIndicators"></div>
+</div>
 
 <div id="logWindow"></div>
 
@@ -291,7 +293,7 @@
         _lastGridItems = [];
         _lastShowBack = false;
         grid.innerHTML = "";
-        const TOTAL = 6 * 2;
+        const TOTAL = 7 * 2;
         for (let i = 0; i < TOTAL; i++) {
             const ph = document.createElement("div");
             ph.className = "gridItem placeholder";
@@ -381,6 +383,14 @@
                 el.appendChild(globe);
                 break;
 
+            case "joystick":
+                // globe, crossed-out when offline
+                const joystick = document.createElement("span");
+                joystick.className = "joystick-icon" + (data.connected ? "" : " offline");
+                joystick.textContent = "🎮";
+                el.appendChild(joystick);
+                break;
+
             case "battery":
                 // battery outline + fill
                 const batt = document.createElement("div");
@@ -419,8 +429,10 @@
                 txt.className = "status-text";
                 // txt.textContent = data.text;
                 txt.innerHTML = data.text;
-                txt.style.color = payload.textcolor;
+                txt.style.color = data.textcolor;
                 el.style.display = "flex";
+                el.style.background = data.color || "transparent";
+                el.style.backgroundClip = 'padding-box';
                 el.style.alignItems = "center";  // vertical center
                 el.style.justifyContent = ({
                     left: "flex-start",
@@ -701,7 +713,7 @@
 
 
     function updatePathBar(path) {
-        document.getElementById("pathBar").textContent = "Path: " + path;
+        document.getElementById("pathText").textContent = "Path: " + path;
     }
 
 
@@ -1230,25 +1242,35 @@
                 } else {
                     element = document.createElement("button");
                     element.className = "gridItem buttonItem";
+
+
+                    const label = item.text || item.name;
+                    const icon = item.icon;            // emoji or undefined
+                    const pos = item.icon_position;   // "top" or "center"
+
+                    // dashed border on folders
                     if (item.is_folder) {
                         element.classList.add("folderButton");
-                        element.innerHTML = '<span>' + (item.text || item.name) + '</span>';
-                        if (item.is_proxy) {
-                            let proxyIcon = document.createElement("div");
-                            proxyIcon.className = "proxyIcon";
-                            proxyIcon.textContent = "🌐";
-                            element.appendChild(proxyIcon);
-                        } else {
-                            // now append a real folder icon
-                            const folderIcon = document.createElement("div");
-                            folderIcon.className = "folderIcon";
-                            // folderIcon.textContent = "📁";   // or any SVG/text you like 🗂
-                            folderIcon.textContent = "🗂";   // or any SVG/text you like
-                            element.appendChild(folderIcon);
-                        }
-                    } else {
-                        element.textContent = item.text || item.name;
                     }
+
+                    // build inner content
+                    if (icon && pos === "top") {
+                        // icon in top-right, label centered
+                        element.innerHTML =
+                            `<div class="buttonIcon top">${icon}</div>
+                   <div class="buttonLabel">${label}</div>`;
+                    } else if (icon && pos === "center") {
+                        // icon big center, label underneath
+                        element.classList.add("icon-center");
+                        element.innerHTML =
+                            `<div class="buttonIcon center">${icon}</div>
+                   <div class="buttonLabel below">${label}</div>`;
+                    } else {
+                        // no icon: just label
+                        element.innerHTML = `<div class="buttonLabel">${label}</div>`;
+                    }
+
+
                     element.id = item.id;
                     element.style.backgroundColor = item.color;
                     element.style.color = item.textcolor;
@@ -1303,7 +1325,7 @@
             }
         )
         ;
-        const TOTAL = 6 * 2;
+        const TOTAL = 7 * 2;
         for (let i = occupiedCells; i < TOTAL; i++) {
             const ph = document.createElement("div");
             ph.className = "gridItem placeholder";
@@ -2116,18 +2138,15 @@
     function updatePageIndicators(current_page, total_pages) {
         const container = document.getElementById("pageIndicators");
         container.innerHTML = "";
+        // ensure horizontal
+        container.style.flexDirection = "row";
         for (let i = 0; i < total_pages; i++) {
-            const indicator = document.createElement("div");
-            indicator.className = "pageIndicator";
-            if (i === current_page) {
-                indicator.classList.add("active");
-            }
-            indicator.addEventListener("click", function (e) {
-                if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({type: 'navigation', event_type: "page_change", page: i}));
-                }
-            });
-            container.appendChild(indicator);
+            const dot = document.createElement("div");
+            dot.className = "pageIndicator" + (i === current_page ? " active" : "");
+            dot.addEventListener("click", () =>
+                ws.send(JSON.stringify({type: 'navigation', event_type: "page_change", page: i}))
+            );
+            container.appendChild(dot);
         }
     }
 

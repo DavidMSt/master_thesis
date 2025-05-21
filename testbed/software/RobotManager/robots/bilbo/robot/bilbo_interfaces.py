@@ -12,8 +12,9 @@ from robots.bilbo.robot.bilbo_definitions import BILBO_Control_Mode
 from robots.bilbo.robot.bilbo_data import twiprSampleFromDict, BILBO_STATE_DATA_DEFINITIONS
 from core.utils.callbacks import CallbackContainer, callback_definition, Callback
 from core.utils.events import event_definition, ConditionEvent
-from core.utils.plotting import RealTimePlot
 from core.utils.exit import register_exit_callback
+from robots.bilbo.robot.bilbo_experiment import BILBO_Experiments
+from robots.bilbo.robot.bilbo_utilities import BILBO_Utilities
 
 # ======================================================================================================================
 
@@ -42,12 +43,22 @@ class BILBO_Interfaces:
     _exit_joystick_thread: bool
 
     # ------------------------------------------------------------------------------------------------------------------
-    def __init__(self, core: BILBO_Core, control: BILBO_Control):
+    def __init__(self, core: BILBO_Core,
+                 control: BILBO_Control,
+                 utilities: BILBO_Utilities,
+                 experiments: BILBO_Experiments):
+
         self.core = core
         self.control = control
+        self.utilities = utilities
+        self.experiments = experiments
         self.core.events.stream.on(self._streamCallback)
 
-        self.live_plots = []
+        self.cli_command_set = BILBO_CLI_CommandSet(core=self.core,
+                                                    control=self.control,
+                                                    experiments=self.experiments,
+                                                    utilities=self.utilities)
+
         self.joystick = None
         self.joystick_thread = None
 
@@ -58,7 +69,6 @@ class BILBO_Interfaces:
     # ------------------------------------------------------------------------------------------------------------------
     def close(self, *args, **kwargs):
         self.removeJoystick()
-        self.closeLivePlots()
 
     # ------------------------------------------------------------------------------------------------------------------
     def addJoystick(self, joystick: Joystick):
@@ -109,84 +119,19 @@ class BILBO_Interfaces:
             self.joystick_thread = None
 
     # ------------------------------------------------------------------------------------------------------------------
-    def openLivePlot(self, state_name: str):
-        if state_name not in BILBO_STATE_DATA_DEFINITIONS:
-            self.core.logger.error(f"State '{state_name}' not a valid state name.")
-            return
-
-        # Check if we already have a live plot with this state
-        for live_plot in self.live_plots:
-            if live_plot["state_name"] == state_name:
-                self.core.logger.warning(f"Live plot for state '{state_name}' already exists.")
-                return
-
-        if BILBO_STATE_DATA_DEFINITIONS[state_name]['unit'] == 'rad':
-            min_val = math.degrees(BILBO_STATE_DATA_DEFINITIONS[state_name]['min'])
-        else:
-            min_val = BILBO_STATE_DATA_DEFINITIONS[state_name]['min']
-
-        if BILBO_STATE_DATA_DEFINITIONS[state_name]['unit'] == 'rad':
-            max_val = math.degrees(BILBO_STATE_DATA_DEFINITIONS[state_name]['max'])
-        else:
-            max_val = BILBO_STATE_DATA_DEFINITIONS[state_name]['max']
-
-        plot = RealTimePlot(window_length=10,
-                            signals_info=[
-                                {"name": state_name, "ymin": min_val,
-                                 "ymax": max_val}],
-                            title=f"{self.core.id}: {state_name}",
-                            value_format=BILBO_STATE_DATA_DEFINITIONS[state_name]['display_resolution'])
-
-        plot.start()
-
-        plot.callbacks.close.register(self._livePlotClosed_callback, inputs={"plot": plot})
-
-        self.live_plots.append({
-            "state_name": state_name,
-            "plot": plot
-        })
-
-    # ------------------------------------------------------------------------------------------------------------------
-    def closeLivePlots(self, state_name: str = None):
-
-        if state_name is None:
-
-            # Close all live plots
-            live_plots = self.live_plots.copy()
-            for live_plot in live_plots:
-                live_plot["plot"].close()
-                self.live_plots.remove(live_plot)
-                self.core.logger.info(f"Closed live plot: {live_plot['state_name']}")
-
-        else:
-            for live_plot in self.live_plots:
-                if live_plot["state_name"] == state_name:
-                    live_plot["plot"].close()
-                    self.live_plots.remove(live_plot)
-                    self.core.logger.info(f"Closed live plot: {live_plot['state_name']}")
-                    break
-
-    # ------------------------------------------------------------------------------------------------------------------
     def _streamCallback(self, stream, *args, **kwargs):
         data = twiprSampleFromDict(stream.data)
+        #
+        # for plot in self.live_plots:
+        #     state_name = plot["state_name"]
+        #     state_data = getattr(data.estimation.state, state_name)
+        #     if BILBO_STATE_DATA_DEFINITIONS[state_name]['unit'] == 'rad':
+        #         state_data = math.degrees(state_data)
+        #     elif BILBO_STATE_DATA_DEFINITIONS[state_name]['unit'] == 'rad/s':
+        #         state_data = math.degrees(state_data)
+        #     plot["plot"].push_data(state_data)
 
-        for plot in self.live_plots:
-            state_name = plot["state_name"]
-            state_data = getattr(data.estimation.state, state_name)
-            if BILBO_STATE_DATA_DEFINITIONS[state_name]['unit'] == 'rad':
-                state_data = math.degrees(state_data)
-            elif BILBO_STATE_DATA_DEFINITIONS[state_name]['unit'] == 'rad/s':
-                state_data = math.degrees(state_data)
-            plot["plot"].push_data(state_data)
 
-    # ------------------------------------------------------------------------------------------------------------------
-    def _livePlotClosed_callback(self, plot, *args, **kwargs):
-
-        for live_plot in self.live_plots:
-            if live_plot["plot"] == plot:
-                self.live_plots.remove(live_plot)
-                self.core.logger.info(f"Closed live plot: {live_plot['state_name']}")
-                break
 
     # ------------------------------------------------------------------------------------------------------------------
     def _startJoystickThread(self):
@@ -212,11 +157,15 @@ class BILBO_Interfaces:
 # ======================================================================================================================
 class BILBO_CLI_CommandSet(CommandSet):
 
-    def __init__(self, robot: 'BILBO'):
-        self.robot = robot
+    def __init__(self, core: BILBO_Core, control: BILBO_Control, experiments: BILBO_Experiments,
+                 utilities: BILBO_Utilities):
+        self.core = core
+        self.control = control
+        self.experiments = experiments
+        self.utilities = utilities
 
         beep_command = Command(name='beep',
-                               callback=self.robot.core.beep,
+                               callback=self.core.beep,
                                allow_positionals=True,
                                arguments=[
                                    CommandArgument(name='frequency',
@@ -244,7 +193,7 @@ class BILBO_CLI_CommandSet(CommandSet):
                                description='Beeps the Buzzer')
 
         speak_command = Command(name='speak',
-                                callback=self.robot.speak,
+                                callback=self.core.speak,
                                 allow_positionals=True,
                                 arguments=[
                                     CommandArgument(name='text',
@@ -257,7 +206,7 @@ class BILBO_CLI_CommandSet(CommandSet):
                                 ], )
 
         mode_command = Command(name='mode',
-                               callback=self.robot.control.setControlMode,
+                               callback=self.control.setControlMode,
                                allow_positionals=True,
                                arguments=[
                                    CommandArgument(name='mode',
@@ -270,16 +219,35 @@ class BILBO_CLI_CommandSet(CommandSet):
                                ], )
 
         stop_command = Command(name='stop',
-                               callback=self.robot.stop,
+                               callback=Callback(
+                                   function=self.control.setControlMode,
+                                   inputs={'mode': BILBO_Control_Mode.OFF},
+                                   discard_inputs=True,
+                               ),
                                description='Deactivates the control on the robot',
                                arguments=[])
 
         read_state_command = Command(name='read',
-                                     callback=self.robot.control.getControlState,
+                                     callback=self.control.getControlState,
                                      description='Reads the current control state and mode', )
 
+        plot_state_command = Command(name='plot',
+                                     callback=self.utilities.openLivePlot,
+                                     allow_positionals=True,
+                                     arguments=[
+                                         CommandArgument(name='state',
+                                                         short_name='s',
+                                                         type=str,
+                                                         description='State to plot',
+                                                         optional=False,
+                                                         )
+                                     ], )
+
         test_communication = Command(name='testComm',
-                                     callback=self.test_communication,
+                                     callback=Callback(
+                                         function=self.utilities.test_response_time,
+                                         execute_in_thread=True,
+                                     ),
                                      description='Tests the communication with the robot',
                                      arguments=[
                                          CommandArgument(name='iterations',
@@ -291,7 +259,7 @@ class BILBO_CLI_CommandSet(CommandSet):
                                      ])
 
         statefeedback_command = Command(name='sfg',
-                                        callback=self.robot.control.setStateFeedbackGain,
+                                        callback=self.control.setStateFeedbackGain,
                                         allow_positionals=True,
                                         arguments=[
                                             CommandArgument(name='gain',
@@ -303,7 +271,7 @@ class BILBO_CLI_CommandSet(CommandSet):
                                         ], )
 
         forward_pid_command = Command(name='fpid',
-                                      callback=self.robot.control.setForwardPID,
+                                      callback=self.control.setForwardPID,
                                       allow_positionals=True,
                                       arguments=[
                                           CommandArgument(name='p',
@@ -325,7 +293,7 @@ class BILBO_CLI_CommandSet(CommandSet):
 
         turn_pid_command = Command(name='tpid',
                                    allow_positionals=True,
-                                   callback=self.robot.control.setTurnPID,
+                                   callback=self.control.setTurnPID,
                                    arguments=[
                                        CommandArgument(name='p',
                                                        type=float,
@@ -345,7 +313,7 @@ class BILBO_CLI_CommandSet(CommandSet):
                                    ])
 
         read_control_config_command = Command(name='read',
-                                              callback=self.robot.control.readControlConfiguration,
+                                              callback=self.control.readControlConfiguration,
                                               description='Reads the current control configuration',
                                               arguments=[])
 
@@ -358,7 +326,7 @@ class BILBO_CLI_CommandSet(CommandSet):
 
         test_trajectory_command = Command(name='test',
                                           allow_positionals=True,
-                                          callback=self.robot.experiments.runTestTrajectories,
+                                          callback=self.experiments.runTestTrajectories,
                                           execute_in_thread=True,
                                           arguments=[
                                               CommandArgument(name='num',
@@ -388,72 +356,13 @@ class BILBO_CLI_CommandSet(CommandSet):
 
         experiment_command_set = CommandSet(name='experiment', commands=[test_trajectory_command])
 
-        super().__init__(name=f"{robot.id}", commands=[beep_command,
-                                                       speak_command,
-                                                       mode_command,
-                                                       stop_command,
-                                                       read_state_command,
-                                                       test_communication],
+        super().__init__(name=f"{self.core.id}", commands=[beep_command,
+                                                           speak_command,
+                                                           mode_command,
+                                                           stop_command,
+                                                           read_state_command,
+                                                           plot_state_command,
+                                                           test_communication],
 
                          child_sets=[control_command_set, experiment_command_set])
 
-    def test_communication(self, iterations=10):
-        test_response_time(self.robot, iterations=iterations, print_response_time=True)
-
-
-# === TEST RESPONSE TIME ===============================================================================================
-def test_response_time(bilbo, iterations=10, print_response_time=False):
-    """
-    Measures the response time of the Frodo robot's test method over multiple iterations.
-
-    Args:
-        iterations (int, optional): Number of test iterations. Defaults to 10.
-        print_response_time (bool, optional): Whether to print individual response times. Defaults to False.
-
-    Logs:
-        - Total number of timeouts.
-        - Maximum, minimum, and average response times in milliseconds.
-    """
-    response_times: list[(None, float)] = [None] * iterations  # List to store response times
-    timeouts = 0  # Counter for timeouts
-
-    bilbo.core.logger.info("Testing response time")
-
-    # Perform an initial write to check if the robot responds
-    data = bilbo.test("HALLO", timeout=1)
-
-    if data is None:
-        bilbo.core.logger.warning("Initial write timed out")
-        return  # Exit the function if initial test fails
-
-    for i in range(iterations):
-        start = time.perf_counter()  # Record start time
-        data = bilbo.test("HALLO", timeout=1)  # Send test message
-
-        if data is None:
-            timeouts += 1  # Increment timeout counter
-            response_times[i] = None
-        else:
-            response_times[i] = time.perf_counter() - start  # Calculate response time
-
-        # Log response time or timeout occurrence
-        if print_response_time and data is not None:
-            bilbo.core.logger.info(f"{i + 1}/{iterations} Response time: {(response_times[i] * 1000):.2f} ms")
-        else:
-            bilbo.core.logger.warning(f"{i + 1}/{iterations} Timeout")
-
-        time.sleep(0.25)  # Delay before next test iteration
-
-    # Filter out None values (timeouts) from response times
-    valid_times = [response_time for response_time in response_times if response_time is not None]
-
-    # Calculate statistics
-    max_time = max(valid_times)  # Maximum response time
-    min_time = min(valid_times)  # Minimum response time
-    avg_time = sum(valid_times) / len(valid_times)  # Average response time
-
-    # Log results
-    bilbo.core.logger.info(f"Timeouts: {timeouts}")
-    bilbo.core.logger.info(f"Max time: {max_time * 1000:.2f} ms")
-    bilbo.core.logger.info(f"Min time: {min_time * 1000:.2f} ms")
-    bilbo.core.logger.info(f"Average time: {avg_time * 1000:.2f} ms")

@@ -634,7 +634,7 @@ class ButtonGroup:
             if child.position is None:
                 continue
             col, row = child.position
-            w, h = child.size if hasattr(child, 'size') and child.size else (1, 1)
+            w, h = child.width if hasattr(child, 'size') and child.width else (1, 1)
             for r in range(row, row + h):
                 for c in range(col, col + w):
                     occupancy[r][c] = True
@@ -651,9 +651,9 @@ class ButtonGroup:
         Otherwise, auto-assign a free spot by scanning the grid, ignoring any cell
         currently occupied only by placeholders.
         """
-        if not hasattr(widget, 'size') or widget.size is None:
-            widget.size = (1, 1)
-        w, h = widget.size
+        if not hasattr(widget, 'size') or widget.width is None:
+            widget.width = (1, 1)
+        w, h = widget.width
         grid_rows, grid_cols = self.grid_size
 
         # For auto-assignment, non-reserved widgets must start at col >= 1; reserved can start at 0.
@@ -711,7 +711,7 @@ class ButtonGroup:
         remove it from the children and the placeholder dictionary.
         """
         col, row = widget.position
-        w, h = widget.size
+        w, h = widget.width
         cells = [(c, r) for r in range(row, row + h) for c in range(col, col + w)]
         for cell in cells:
             # For non-reserved cells (c >= 1) any widget (if placed) can remove the placeholder.

@@ -72,7 +72,7 @@ class FRODO_Agent_Measurement:
     psi: float
 
 
-class FRODO_VisionAgent(FRODO_DynamicAgent):
+class FRODO_SimulatedVisionAgent(FRODO_DynamicAgent):
     fov: float
     view_range: float
     measurements: dict[str, FRODO_Agent_Measurement]
@@ -101,10 +101,13 @@ class FRODO_VisionAgent(FRODO_DynamicAgent):
                                function=self.action_estimation,
                                priority=3)
 
-        # self.scheduling.actions[BASE_ENVIRONMENT_ACTIONS.OUTPUT].addAction(self.print_state)
-
         self.input = [0, 0]
 
+    # ------------------------------------------------------------------------------------------------------------------
+    def setInput(self, v: float=0.0, psi_dot:float =0):
+        self.input = [v, psi_dot]
+
+    # ------------------------------------------------------------------------------------------------------------------
     def action_measurement(self):
         self.logger.debug(f"{self.scheduling.tick}: ({self.agent_id}) Action Frodo Measurement")
 
@@ -118,7 +121,6 @@ class FRODO_VisionAgent(FRODO_DynamicAgent):
         self.measurements = {}
 
         for agent_id, other_agent in other_agents.items():
-            ...
             in_fov = is_in_fov(pos=self.configuration['pos'].value,
                                psi=self.configuration['psi'].value,
                                fov=self.fov,
@@ -148,16 +150,20 @@ class FRODO_VisionAgent(FRODO_DynamicAgent):
 
                 self.measurements[other_agent.agent_id] = measurement
 
+    # ------------------------------------------------------------------------------------------------------------------
     def action_frodo_communication(self):
         self.logger.debug(f"{self.scheduling.tick}: ({self.agent_id}) Action Frodo Communication")
 
+    # ------------------------------------------------------------------------------------------------------------------
     def action_estimation(self):
         self.logger.debug(f"{self.scheduling.tick}: ({self.agent_id}) Action Frodo Estimation")
 
+    # ------------------------------------------------------------------------------------------------------------------
     def _onAdd_callback(self):
-        self.logger.info(f"{self.agent_id} added to Environment")
+        self.logger.debug(f"{self.agent_id} added to Environment")
         super()._onAdd_callback()
 
+    # ------------------------------------------------------------------------------------------------------------------
     def print_state(self):
         self.logger.info(f"state: {self.configuration}")
 
@@ -165,56 +171,72 @@ class FRODO_VisionAgent(FRODO_DynamicAgent):
 # ======================================================================================================================
 class FRODO_Simulation:
     env: FrodoEnvironment
-    agents: dict[str, FRODO_VisionAgent]
+    agents: dict[str, FRODO_SimulatedVisionAgent]
     web_interface: FRODO_Web_Interface
 
     virtual_agents_plotting_group: Group
 
-    def __init__(self, Ts=0.05):
+    def __init__(self, Ts=0.05, use_web_interface: bool = False):
         self.env = FrodoEnvironment(Ts, run_mode='rt')
         self.agents = {}
-        self.web_interface = FRODO_Web_Interface()
+
+        if use_web_interface:
+            self.web_interface = FRODO_Web_Interface()
+        else:
+            self.web_interface = None  # type: ignore
 
         self.logger = Logger('FRODO SIM')
         self.logger.setLevel('INFO')
 
         self.virtual_agents_plotting_group = None
 
-        self.env.scheduling.actions[BASE_ENVIRONMENT_ACTIONS.OUTPUT].addAction(self._update_webinterface)
+
+        if self.web_interface is not None:
+            self.env.scheduling.actions[BASE_ENVIRONMENT_ACTIONS.OUTPUT].addAction(self._update_webinterface)
 
     # === METHODS ======================================================================================================
     def init(self):
         self.env.init()
-        self._init_webinterface()
 
+        if self.web_interface is not None:
+            self._init_webinterface()
+
+    # ------------------------------------------------------------------------------------------------------------------
     def start(self, steps=None):
-        self.web_interface.start()
         self.env.start(steps, thread=True)
 
-    def addVirtualAgent(self, id: str, fov_deg=120, view_range=1.5):
+        if self.web_interface is not None:
+            self.web_interface.start()
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def addVirtualAgent(self, id: str, fov_deg=120, view_range=1.5) -> FRODO_SimulatedVisionAgent:
         self.logger.info(f"Add Virtual Agent: {id}")
 
         # Add the agent to the simulation
-        self.agents[id] = FRODO_VisionAgent(agent_id=id, Ts=self.env.Ts, fov_deg=fov_deg, view_range=view_range)
+        self.agents[id] = FRODO_SimulatedVisionAgent(agent_id=id, Ts=self.env.Ts, fov_deg=fov_deg, view_range=view_range)
         self.env.addObject(self.agents[id])
 
-        # Add the agent to the plotter
-        group = self.virtual_agents_plotting_group.add_group(id)
-        group.add_vision_agent(
-            id=id,
-            position=[0, 0],
-            psi=0,
-            vision_radius=self.agents[id].view_range,
-            vision_fov=self.agents[id].fov,
-            color=frodo_virtual_agent_colors[id] if id in frodo_virtual_agent_colors else [0.5, 0.5, 0.5]
-        )
+
+        if self.web_interface is not None:
+            # Add the agent to the plotter
+            group = self.virtual_agents_plotting_group.add_group(id)
+            group.add_vision_agent(
+                id=id,
+                position=[0, 0],
+                psi=0,
+                vision_radius=self.agents[id].view_range,
+                vision_fov=self.agents[id].fov,
+                color=frodo_virtual_agent_colors[id] if id in frodo_virtual_agent_colors else [0.5, 0.5, 0.5]
+            )
         return self.agents[id]
 
+    # ------------------------------------------------------------------------------------------------------------------
     def removeVirtualAgent(self, id: str):
         self.logger.info(f"Remove Virtual Agent: {id}")
         self.env.removeObject(self.agents[id])
         del self.agents[id]
 
+    # ------------------------------------------------------------------------------------------------------------------
     def _init_webinterface(self):
         self.virtual_agents_plotting_group = self.web_interface.add_group('Virtual Agents')
         self.web_interface.add_rectangle(
@@ -225,6 +247,7 @@ class FRODO_Simulation:
             fill=[0.9, 0.9, 0.9],
         )
 
+    # ------------------------------------------------------------------------------------------------------------------
     def _update_webinterface(self):
 
         for id, agent in self.agents.items():
@@ -267,18 +290,19 @@ class FRODO_Simulation:
 
 
 def main():
-    app = FRODO_Simulation()
+    app = FRODO_Simulation(use_web_interface=True)
     app.init()
     app.start()
 
     ag1 = app.addVirtualAgent("frodo1_v")
     ag2 = app.addVirtualAgent("frodo2_v")
     ag3 = app.addVirtualAgent("frodo3_v", view_range=4)
-    ag1.input = [0.5, 0.5]
-    ag2.setPosition([0, 1])
+    ag1.setInput(v=0.5, psi_dot=0)
+    ag2.setPosition(x=0, y=1)
 
-    ag3.setPosition([0, -1])
-    ag3.setConfiguration(dimension='psi', value=math.pi / 2)
+    ag3.setPosition(x=0, y=-1)
+    ag3.setOrientation(math.pi / 2)
+    # ag3.setConfiguration(dimension='psi', value=math.pi / 2)
     while True:
         time.sleep(1)
 

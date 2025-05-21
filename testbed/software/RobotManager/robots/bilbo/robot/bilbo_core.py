@@ -18,7 +18,6 @@ class BILBO_Core_Events:
     control_mode_changed: ConditionEvent = ConditionEvent(flags=[('mode', BILBO_Control_Mode)])
     control_configuration_changed: ConditionEvent
     control_error: ConditionEvent
-
     stream: ConditionEvent
 
 
@@ -47,6 +46,10 @@ class BILBO_Core:
     # ------------------------------------------------------------------------------------------------------------------
     def beep(self, frequency=1000, time_ms=250, repeats=1):
         self.device.function(function='beep', data={'frequency': frequency, 'time_ms': time_ms, 'repeats': repeats})
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def speak(self, text):
+        self.device.function(function='speak', data={'message': text})
 
     # ------------------------------------------------------------------------------------------------------------------
     def _handleLogMessage(self, log_message: TCP_JSON_Message):

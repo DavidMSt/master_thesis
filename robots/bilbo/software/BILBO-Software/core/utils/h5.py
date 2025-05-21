@@ -1,3 +1,5 @@
+
+
 import h5py
 import numpy as np
 import threading
@@ -54,7 +56,7 @@ class H5PyDictLogger:
         Opens the HDF5 file. If the dataset exists, it is opened and its size recorded;
         otherwise, a new dataset is created with an initial shape of 0.
         """
-        self.file = h5py.File(self.filename, mode)
+        self.file = h5py.File(self.filename, mode, locking=False)
         if self.dataset_name in self.file:
             self.dataset = self.file[self.dataset_name]
             self.current_size = self.dataset.shape[0]
@@ -113,14 +115,15 @@ class H5PyDictLogger:
             else:
                 raise ValueError("Each sample must be a dictionary.")
 
-        # Convert list of records to a NumPy structured array
+        # Convert the list of records to a NumPy structured array
         records_array = np.array(records, dtype=self.dtype)
         with self.lock:
             new_size = self.current_size + len(records_array)
-            self.dataset.resize((new_size,))
-            self.dataset[self.current_size:new_size] = records_array
-            self.current_size = new_size
-            self.file.flush()  # Ensure data is written to disk.
+            if self.dataset is not None:
+                self.dataset.resize((new_size,))
+                self.dataset[self.current_size:new_size] = records_array
+                self.current_size = new_size
+                self.file.flush()  # Ensure data is written to disk.
 
     def getSample(self, index, signals=None):
         """

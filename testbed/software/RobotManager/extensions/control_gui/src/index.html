@@ -1,0 +1,62 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>WebGUI Layout</title>
+    <link rel="stylesheet" href="./lib/styles.css"/>
+    <link rel="stylesheet" href="./lib/widget-styles.css"/>
+</head>
+<body>
+<header id="headbar">
+    <div id="headbar_grid"></div>
+</header>
+<nav id="navigation_bar">
+    <div id="navigation_bar_grid"></div>
+</nav>
+<aside id="application_bar">
+    <div id="application_bar_grid"></div>
+</aside>
+<main id="content">
+    <div id="grid" class="grid">
+
+        <!--        <div id="map-app" class="map-wrapper">-->
+        <!--            <canvas id="mapCanvas"></canvas>-->
+        <!--        </div>-->
+    </div>
+</main>
+<footer id="bottombar">
+    <div class="bottombar__left" id="terminal-container">
+    </div>
+    <div class="bottombar__right"></div>
+</footer>
+<!-- Auto-populate grid cells -->
+
+<script type="module">
+    import {ControlGui} from './lib/control_gui';
+    import {mountTerminal} from "./lib/terminal/terminal.js";
+
+    window.addEventListener('DOMContentLoaded', () => {
+        const mapContainer = document.getElementById('map-app');
+        const canvas = document.getElementById('mapCanvas');
+
+
+        const wsUrl = `ws://${window.location.hostname}:8099`;
+        const controlGUI = new ControlGui({
+            grid: "grid",
+            navigation_bar: "navigation_bar",
+            navigation_bar_grid: "navigation_bar_grid",
+            application_bar: "application_bar",
+            application_bar_grid: "application_bar_grid",
+            head_bar: "headbar",
+            head_bar_grid: "headbar_grid",
+            terminal_container: "terminal-container",
+        }, wsUrl);
+
+    });
+
+
+</script>
+</body>
+</html>

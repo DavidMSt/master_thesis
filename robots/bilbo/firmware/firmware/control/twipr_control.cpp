@@ -612,12 +612,18 @@ twipr_logging_control_t TWIPR_ControlManager::getSample() {
 	twipr_logging_control_t sample;
 	sample.control_mode = this->mode;
 	sample.control_status = this->status;
+
+	sample.config.control_mode = this->mode;
+	sample.config.vic_enabled = this->control_config.vic_enabled;
+	sample.config.tic_enabled = this->control_config.tic_enabled;
+
 	sample.external_input = this->_external_input;
 	sample.data = this->_data;
 
 	return sample;
 }
 
+/* ======================================================== */
 void TWIPR_ControlManager::_resetExternalInput() {
 
 	this->_external_input.u_direct_1 = 0.0;

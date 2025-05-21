@@ -1,0 +1,24 @@
+{
+  "name": "chartjs-example",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "parcel src/index.html",
+    "build": "parcel build src/index.html"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.27.1",
+    "babel-plugin-transform-define": "^2.1.4",
+    "parcel": "^2.6.2"
+  },
+  "dependencies": {
+    "@cubejs-client/core": "^0.31.0",
+    "chart.js": "^3.9.1",
+    "chartjs-adapter-moment": "^1.0.1",
+    "chartjs-plugin-streaming": "^2.0.0",
+    "vue": "^3.5.14"
+  },
+  "alias": {
+    "vue": "vue/dist/vue.esm-bundler.js"
+  }
+}

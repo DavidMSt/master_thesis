@@ -26,7 +26,10 @@ LOG_LEVELS = {
     "INFO": logging.INFO,
     "DEBUG": logging.DEBUG,
     "NOTSET": logging.NOTSET,
+    "IMPORTANT": 25,
 }
+
+logging.addLevelName(LOG_LEVELS["IMPORTANT"], "IMPORTANT")
 
 # List to store all enabled redirections
 redirections = []
@@ -36,6 +39,24 @@ log_files: dict = {}
 
 # Global dictionary to store custom Logger instances to prevent duplicates.
 custom_loggers = {}
+
+_show_log_file = False
+_show_log_level = False
+
+
+def setLoggingSettings(show_log_file=False, show_log_level=False):
+    """
+    Update global formatting flags and reconfigure all existing Logger instances
+    so they pick up the new settings immediately.
+    """
+    global _show_log_file, _show_log_level
+    _show_log_file = show_log_file
+    _show_log_level = show_log_level
+
+    # Re-apply formatter settings on every existing Logger
+    for lg in custom_loggers.values():
+        if hasattr(lg, '_apply_formatter_settings'):
+            lg._apply_formatter_settings()
 
 
 @atexit.register
@@ -254,21 +275,33 @@ class CustomFormatter(logging.Formatter):
     """
     _filename: str
 
-    def __init__(self, info_color=string_utils.grey):
+    def __init__(self):
         super().__init__()
 
         # Remove any existing handlers from the root logger
         for handler in logging.root.handlers[:]:
             logging.root.removeHandler(handler)
 
-        self.str_format = "%(asctime)s.%(msecs)03d %(levelname)-10s  %(name)-20s %(filename)-30s  %(message)s"
+        if _show_log_level:
+            if _show_log_file:
+                self.str_format = "%(asctime)s.%(msecs)03d %(levelname)-12s  %(name)-20s %(filename)-30s  %(message)s"
+            else:
+                self.str_format = "%(asctime)s.%(msecs)03d %(levelname)-12s  %(name)-20s  %(message)s"
+        else:
+            if _show_log_file:
+                self.str_format = "%(asctime)s.%(msecs)03d %(name)-20s %(filename)-30s  %(message)s"
+            else:
+                self.str_format = "%(asctime)s.%(msecs)03d %(name)-20s  %(message)s"
+
         self._filename = None
 
         # Define color formats for each log level
         self.FORMATS = {
-            logging.DEBUG: string_utils.escapeCode(colors.DARK_BROWN) + self.str_format + string_utils.reset,
-            logging.INFO: info_color + self.str_format + string_utils.reset,
-            logging.WARNING: string_utils.yellow + self.str_format + string_utils.reset,
+            logging.DEBUG: string_utils.escapeCode(colors.DARK_GREY) + self.str_format + string_utils.reset,
+            LOG_LEVELS['IMPORTANT']: string_utils.escapeCode(
+                colors.MEDIUM_GREEN) + self.str_format + string_utils.reset,
+            logging.INFO: string_utils.escapeCode(colors.CYAN) + self.str_format + string_utils.reset,
+            logging.WARNING: string_utils.escapeCode(colors.MEDIUM_ORANGE) + self.str_format + string_utils.reset,
             logging.ERROR: string_utils.red + self.str_format + string_utils.reset,
             logging.CRITICAL: string_utils.bold_red + self.str_format + string_utils.reset
         }
@@ -335,12 +368,25 @@ class Logger:
             info_color = string_utils.rgb_to_256color_escape(info_color, background)
 
         # Create a new formatter and add a stream handler only once.
-        self.formatter = CustomFormatter(info_color=info_color)
-        stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(self.formatter)
-        self._logger.addHandler(stream_handler)
+        self.formatter = CustomFormatter()
+        self.stream_handler = logging.StreamHandler()
+        self.stream_handler.setFormatter(self.formatter)
+        self._logger.addHandler(self.stream_handler)
         self._logger.propagate = False
         self._logger._custom_initialized = True
+
+    def _apply_formatter_settings(self):
+        """
+        Re-create the CustomFormatter (respecting the current
+        _show_log_file/_show_log_level flags) and re-attach it
+        to the stream handler.
+        """
+        # build a fresh formatter using the updated globals
+        new_fmt = CustomFormatter()
+        self.formatter = new_fmt
+
+        # swap the formatter on the existing stream handler
+        self.stream_handler.setFormatter(new_fmt)
 
     @staticmethod
     def getFileName():
@@ -394,6 +440,12 @@ class Logger:
         self._logger.critical(msg, *args, **kwargs)
         handle_log(msg, logger=self, level=logging.CRITICAL)
 
+    def important(self, msg, *args, **kwargs):
+        self.formatter.setFileName(self.getFileName())
+        # use the numeric level under the hood
+        self._logger.log(LOG_LEVELS['IMPORTANT'], msg, *args, **kwargs)
+        handle_log(msg, logger=self, level=LOG_LEVELS['IMPORTANT'])
+
     def setLevel(self, level):
         """
         Sets the logging level for this logger.
@@ -418,3 +470,14 @@ class Logger:
         Retrieves the current logging level from the underlying logger.
         """
         return self._logger.level
+
+
+if __name__ == '__main__':
+    logger = Logger('test', 'DEBUG')
+    setLoggingSettings(show_log_file=False, show_log_level=False)
+    logger.info('This is an info message')
+    logger.warning('This is a warning message')
+    logger.debug('This is a debug message')
+    logger.important('This is an important message')
+    logger.error('This is an error message')
+    logger.critical('This is a critical message')

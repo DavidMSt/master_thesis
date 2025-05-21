@@ -126,8 +126,8 @@ def main():
     x1_true = np.array([0.0, 0.0, math.sin(0.0), math.cos(0.0)])
 
     # Agent 2 absolute state:
-    psi2 = math.radians(90 + 45)  # 135° in radians
-    x2_true = np.array([0.5, 0.5, math.sin(psi2), math.cos(psi2)])
+    psi2 = math.radians(90)  # 135° in radians
+    x2_true = np.array([1, 1, math.sin(psi2), math.cos(psi2)])
 
     # Agent 3 absolute state:
     psi3 = math.radians(-90)  # -90° in radians

@@ -905,7 +905,7 @@ class Space:
         elif any([elem for elem in self.mappings if space in elem]):
             return True
         elif self.dof == space.dof and all(
-                [self.dimensions[i].name == space.size[i].name for i in range(0, self.dof)]):
+                [self.dimensions[i].name == space.width[i].name for i in range(0, self.dof)]):
             return True
         return False
 

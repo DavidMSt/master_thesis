@@ -1072,7 +1072,7 @@ class WidgetGroup:
             if child.position is None:
                 continue
             col, row = child.position
-            w, h = child.size if hasattr(child, 'size') and child.size else (1, 1)
+            w, h = child.width if hasattr(child, 'size') and child.width else (1, 1)
             for r in range(row, row + h):
                 for c in range(col, col + w):
                     occupancy[r][c] = True
@@ -1089,9 +1089,9 @@ class WidgetGroup:
           - Widgets with a height > 1 do not cross a page boundary.
         Otherwise, auto-assign a free spot by scanning the grid (across pages) for a free spot.
         """
-        if not hasattr(widget, 'size') or widget.size is None:
-            widget.size = (1, 1)
-        w, h = widget.size
+        if not hasattr(widget, 'size') or widget.width is None:
+            widget.width = (1, 1)
+        w, h = widget.width
         grid_rows, grid_cols = self.grid_size
         total_rows = self.pages * grid_rows
 
@@ -1153,7 +1153,7 @@ class WidgetGroup:
         Remove any placeholder occupying cells in the area covered by the widget.
         """
         col, row = widget.position
-        w, h = widget.size
+        w, h = widget.width
         cells = [(c, r) for r in range(row, row + h) for c in range(col, col + w)]
         for cell in cells:
             c, r = cell
@@ -1304,7 +1304,7 @@ class WidgetGroup:
             payload = await child.get_payload()
             adjusted_position = [child.position[0], child.position[1] - page_offset] if child.position else [0, 0]
             payload["position"] = adjusted_position
-            payload["grid_size"] = [child.size[0], child.size[1]]
+            payload["grid_size"] = [child.width[0], child.width[1]]
             widget_payloads.append(payload)
 
         return {

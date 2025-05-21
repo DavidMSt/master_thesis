@@ -1,5 +1,6 @@
+from core.utils.dict_utils import format_floats
 from robot.communication.serial.bilbo_serial_messages import BILBO_Control_Event_Message
-from robot.control.position_control import BILBO_PositionControl
+from robot.control.bilbo_control_config import load_config
 # Importing low-level sample class from STM32 interface
 from robot.lowlevel.stm32_sample import BILBO_LL_Sample
 
@@ -10,10 +11,12 @@ import robot.lowlevel.stm32_addresses as addresses
 from robot.lowlevel.stm32_control import *
 from core.utils.events import ConditionEvent, event_definition
 from core.utils.logging_utils import Logger
-from robot.control.definitions import *
+from robot.control.bilbo_control_data import *
+from robot.control.bilbo_control_data import *
 from core.utils.data import limit, are_lists_approximately_equal
 from core.utils.delayed_executor import delayed_execution
-import robot.control.config as control_config
+
+# import robot.control.config as control_config
 
 # === Logger ===========================================================================================================
 logger = Logger('control')
@@ -62,12 +65,12 @@ class BILBO_Control:
     # Current control statuses and modes (both high-level and low-level)
     status: BILBO_Control_Status
     mode: BILBO_Control_Mode
+
     mode_ll: BILBO_Control_Mode_LL
     status_ll: BILBO_Control_Status_LL
 
     # Control configuration (loaded from control_config)
-    config: control_config.ControlConfig
-
+    config: BILBO_ControlConfig
 
     # External and manual control inputs
     external_input: BILBO_Control_Input
@@ -77,7 +80,7 @@ class BILBO_Control:
     # Callback container instance for control events
     callbacks: BILBO_Control_Callbacks
 
-    # Latest low-level control sample received from the STM32 module
+    # The latest low-level control sample received from the STM32 module
     _lowlevel_control_sample: BILBO_LL_Sample
 
     # Timer for periodic updates (default interval: 0.1 seconds)
@@ -111,19 +114,16 @@ class BILBO_Control:
         # Register the callback for receiving STM32 samples
         self._comm.callbacks.rx_stm32_sample.register(self._lowlevel_sample_callback)
 
-        # Initialize callbacks container for high-level events
+        # Initialize callback container for high-level events
         self.callbacks = BILBO_Control_Callbacks()
 
         self.events = BILBO_Control_Events()
-
-
-        self.position_control = BILBO_PositionControl()
 
         # Register commands to the WI-FI module for remote control
         self._comm.wifi.addCommand(identifier='setControlMode',
                                    callback=self.setMode,
                                    arguments=['mode'],
-                                   description='Sets the control mode',)
+                                   description='Sets the control mode')
 
         self._comm.wifi.addCommand(identifier='setNormalizedBalancingInput',
                                    callback=self.setNormalizedBalancingInput,
@@ -150,12 +150,6 @@ class BILBO_Control:
                                    arguments=['enable'],
                                    description='Enabled Theta Integral Control')
 
-
-        self._comm.wifi.addCommand(identifier='setPositionControlWaypoints',
-                                   callback=self.setPositionControlWaypoints,
-                                   arguments=['waypoints'],
-                                   description='Sets the Position Control Waypoints')
-
         self._comm.serial.callbacks.event.register(self._ll_control_event_callback,
                                                    parameters={'messages': [BILBO_Control_Event_Message]})
 
@@ -163,14 +157,6 @@ class BILBO_Control:
         # self._thread = threading.Thread(target=self._threadFunction)
 
         self._lowlevel_control_sample = None  # Type: Ignore
-
-
-
-
-    def setPositionControlWaypoints(self, waypoints):
-        ...
-
-
 
     # === METHODS ======================================================================================================
     def init(self):
@@ -209,14 +195,11 @@ class BILBO_Control:
         # Step 1: Process the STM32 sample
         self._updateFromLowLevelSample(self._lowlevel_control_sample)
 
-        # Step 2: Process the external input and update control input accordingly
+        # Step 2: Process the external input and update the control input accordingly
         external_input = self._updateExternalInput(self.external_input)
 
         # For now, manual input is the only method, so we copy the external input
         self.input = external_input
-
-        if self.mode == BILBO_Control_Mode.POSITION:
-            self.input = self.position_control.update(vnjfdnvjkdfnkv)
 
         # Set the control input in the low-level hardware
         self._setInput(self.input)
@@ -236,7 +219,7 @@ class BILBO_Control:
             control_config.ControlConfig: The loaded configuration if successful, or None otherwise.
         """
         logger.debug(f"Load control config \"{name}\"...")
-        config = control_config.load_config(name)
+        config = load_config(name)
         if config is None:
             logger.warning(f"Control config \"{name}\" not found")
             return None
@@ -359,22 +342,21 @@ class BILBO_Control:
 
         if self.mode == BILBO_Control_Mode.BALANCING:
             # Scale the commands using configuration gains
-            forward_cmd_scaled = forward * self.config.manual.torque.forward_torque_gain
-            turn_cmd_scaled = turn * self.config.manual.torque.turn_torque_gain
+            forward_cmd_scaled = forward * self.config.external_inputs.balancing_input_gain['forward']
+            turn_cmd_scaled = turn * self.config.external_inputs.balancing_input_gain['turn']
             # Combine inputs to calculate left and right torque values
             torque_left = -(forward_cmd_scaled + turn_cmd_scaled)
             torque_right = -(forward_cmd_scaled - turn_cmd_scaled)
 
             # Apply offsets from configuration
-            self.external_input.balancing.u_left = torque_left + self.config.general.torque_offset[0]
-            self.external_input.balancing.u_right = torque_right + self.config.general.torque_offset[1]
+            self.external_input.balancing.u_left = torque_left + self.config.general.torque_offset['left']
+            self.external_input.balancing.u_right = torque_right + self.config.general.torque_offset['right']
 
             if force:
                 self._setBalancingInput_LL(u_left=torque_left, u_right=torque_right)
         else:
             # If not in balancing mode, no action is taken
             ...
-
     # ------------------------------------------------------------------------------------------------------------------
     def setNormalizedSpeedInput(self, forward: (int, float), turn: (int, float)):
         """
@@ -399,8 +381,8 @@ class BILBO_Control:
 
         if self.mode == BILBO_Control_Mode.VELOCITY:
             # Scale speeds using configuration gains
-            forward_speed_scaled = forward * self.config.manual.velocity.forward_velocity_gain
-            turn_speed_scaled = turn * self.config.manual.velocity.turn_velocity_gain
+            forward_speed_scaled = forward * self.config.external_inputs.speed_input_gain['forward']
+            turn_speed_scaled = turn * self.config.external_inputs.speed_input_gain['turn']
             self.external_input.velocity.forward = forward_speed_scaled
             self.external_input.velocity.turn = turn_speed_scaled
         else:
@@ -445,8 +427,8 @@ class BILBO_Control:
 
         if self.mode == BILBO_Control_Mode.VELOCITY:
             # Apply limits defined in the configuration
-            v = limit(v, self.config.manual.velocity.max_forward_velocity)
-            psi_dot = limit(psi_dot, self.config.manual.velocity.max_turn_velocity)
+            v = limit(v, self.config.speed_control.max_speeds['forward'])
+            psi_dot = limit(psi_dot, self.config.speed_control.max_speeds['turn'])
 
             self.external_input.velocity.forward = v
             self.external_input.velocity.turn = psi_dot
@@ -460,7 +442,7 @@ class BILBO_Control:
             K (list): Gain values for state feedback.
         """
         logger.info(f"Set State Feedback Gain to {K}")
-        self.config.statefeedback.gain = K
+        self.config.balancing_control.K = K
         self._setStateFeedbackGain_LL(K)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -474,9 +456,9 @@ class BILBO_Control:
             D (float): Derivative gain.
         """
         logger.info(f"Set Velocity Control PID Forward to {P}, {I}, {D}")
-        self.config.velocity_control.forward.feedback.Kp = P
-        self.config.velocity_control.forward.feedback.Ki = I
-        self.config.velocity_control.forward.feedback.Kd = D
+        self.config.speed_control.v.Kp = P
+        self.config.speed_control.v.Ki = I
+        self.config.speed_control.v.Kd = D
         self._setVelocityControlPIDForward_LL(P, I, D)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -490,13 +472,13 @@ class BILBO_Control:
             D (float): Derivative gain.
         """
         logger.info(f"Set Velocity Control PID Turn to {P}, {I}, {D}")
-        self.config.velocity_control.turn.feedback.Kp = P
-        self.config.velocity_control.turn.feedback.Ki = I
-        self.config.velocity_control.turn.feedback.Kd = D
+        self.config.speed_control.psidot.Kp = P
+        self.config.speed_control.psidot.Ki = I
+        self.config.speed_control.psidot.Kd = D
         self._setVelocityControlPIDTurn_LL(P, I, D)
 
     # ------------------------------------------------------------------------------------------------------------------
-    def setVelocityController(self, config: TWIPR_Speed_Control_Config):
+    def setVelocityController(self, config):
         """
         Set the velocity controller configuration.
 
@@ -517,7 +499,7 @@ class BILBO_Control:
             speed (int or float): Maximum speed to be set.
         """
         logger.info(f"Set max wheel speed to {speed}")
-        self.config.safety.max_speed = speed
+        self.config.general.max_wheel_speed = speed
         self._setMaxWheelSpeed_LL(speed)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -533,7 +515,7 @@ class BILBO_Control:
         if success:
             logger.info(f"Set velocity integral control to {enable}")
 
-            self.config.statefeedback.vic.enabled = enable
+            self.config.balancing_control.vic.enabled = enable
         else:
             logger.warning("Failed to set velocity integral control")
 
@@ -541,7 +523,6 @@ class BILBO_Control:
 
     # ------------------------------------------------------------------------------------------------------------------
     def enableTIC(self, enable: bool) -> bool:
-
         if self.mode == BILBO_Control_Mode.OFF:
             logger.warning("Cannot enable TIC in OFF mode")
             return False
@@ -556,14 +537,14 @@ class BILBO_Control:
 
         if success:
             logger.info(f"Set TIC to {enable}")
-            self.config.statefeedback.tic.enabled = enable
+            self.config.balancing_control.tic.enabled = enable
         else:
             logger.warning("Failed to set TIC")
 
         return success
 
     # ------------------------------------------------------------------------------------------------------------------
-    def getSample(self) -> TWIPR_Control_Sample:
+    def getSample(self) -> dict:
         """
         Retrieve the current control sample.
 
@@ -623,7 +604,7 @@ class BILBO_Control:
 
     # ------------------------------------------------------------------------------------------------------------------
     def _ll_configuration_change_callback(self, configuration: dict):
-        logger.info(f"Received configuration change: {configuration}")
+        logger.info(f"Received configuration change: {format_floats(configuration, 2)}")
 
         self.callbacks.configuration_change.call(configuration)
         self.events.configuration_change.set(resource=configuration)
@@ -635,31 +616,31 @@ class BILBO_Control:
                                   })
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _setControlConfig(self, config: control_config.ControlConfig, verify: bool = False):
+    def _setControlConfig(self, config: BILBO_ControlConfig, verify: bool = False):
 
         control_config = bilbo_control_configuration_ll_t(
-            K=(ctypes.c_float * 8)(*config.statefeedback.gain),  # type: ignore
-            forward_p=config.velocity_control.forward.feedback.Kp,
-            forward_i=config.velocity_control.forward.feedback.Ki,
-            forward_d=config.velocity_control.forward.feedback.Kd,
-            turn_p=config.velocity_control.turn.feedback.Kp,
-            turn_i=config.velocity_control.turn.feedback.Ki,
-            turn_d=config.velocity_control.turn.feedback.Kd,
-            vic_enabled=config.statefeedback.vic.enabled,
-            vic_ki=config.statefeedback.vic.Ki,
-            vic_max_error=config.statefeedback.vic.max_error,
-            vic_v_limit=config.statefeedback.vic.velocity_threshold,
-            tic_enabled=config.statefeedback.tic.enabled,
-            tic_ki=config.statefeedback.tic.Ki,
-            tic_max_error=config.statefeedback.tic.max_error,
-            tic_theta_limit=config.statefeedback.tic.theta_threshold
+            K=(ctypes.c_float * 8)(*config.balancing_control.K),  # type: ignore
+            forward_p=config.speed_control.v.Kp,
+            forward_i=config.speed_control.v.Ki,
+            forward_d=config.speed_control.v.Kd,
+            turn_p=config.speed_control.psidot.Kp,
+            turn_i=config.speed_control.psidot.Ki,
+            turn_d=config.speed_control.psidot.Kd,
+            vic_enabled=config.balancing_control.vic.enabled,
+            vic_ki=config.balancing_control.vic.ki,
+            vic_max_error=config.balancing_control.vic.max_error,
+            vic_v_limit=config.balancing_control.vic.v_limit,
+            tic_enabled=config.balancing_control.tic.enabled,
+            tic_ki=config.balancing_control.tic.ki,
+            tic_max_error=config.balancing_control.tic.max_error,
+            tic_theta_limit=config.balancing_control.tic.theta_limit
         )
 
         success = self._comm.serial.executeFunction(
             module=addresses.TWIPR_AddressTables.REGISTER_TABLE_GENERAL,
             address=addresses.TWIPR_ControlAddresses.SET_CONFIG,
             data=control_config,
-            input_type=bilbo_control_configuration_ll_t,
+            input_type=bilbo_control_configuration_ll_t,  # type: ignore
             output_type=ctypes.c_bool,
             timeout=1
         )
@@ -668,34 +649,34 @@ class BILBO_Control:
             logger.warning("Failed to set control configuration")
             return False
 
-        self._setMaxWheelSpeed_LL(speed=config.safety.max_speed)
+        self._setMaxWheelSpeed_LL(speed=config.general.max_wheel_speed)
 
         if verify:
-            # Read back configuration from low-level module
+            # Read back configuration from the low-level module
             config_ll = self._readControlConfig_LL()
 
             if config_ll is None:
                 return False
 
             # Verify state feedback gain
-            if not are_lists_approximately_equal(config_ll['K'], config.statefeedback.gain):
+            if not are_lists_approximately_equal(config_ll['K'], config.balancing_control.K):
                 logger.warning("State Feedback Gain not set correctly")
                 return False
 
             # Verify forward PID control values
             if not are_lists_approximately_equal(
-                    [config.velocity_control.forward.feedback.Kp,
-                     config.velocity_control.forward.feedback.Ki,
-                     config.velocity_control.forward.feedback.Kd],
+                    [config.speed_control.v.Kp,
+                     config.speed_control.v.Ki,
+                     config.speed_control.v.Kd],
                     [config_ll['forward_p'], config_ll['forward_i'], config_ll['forward_d']]):
                 logger.warning("PID Control Values not set correctly")
                 return False
 
             # Verify turn PID control values
             if not are_lists_approximately_equal(
-                    [config.velocity_control.turn.feedback.Kp,
-                     config.velocity_control.turn.feedback.Ki,
-                     config.velocity_control.turn.feedback.Kd],
+                    [config.speed_control.psidot.Kp,
+                     config.speed_control.psidot.Ki,
+                     config.speed_control.psidot.Kd],
                     [config_ll['turn_p'], config_ll['turn_i'], config_ll['turn_d']]):
                 logger.warning("PID Control Values not set correctly")
                 return False
@@ -1000,8 +981,6 @@ class BILBO_Control:
         elif self.mode == BILBO_Control_Mode.BALANCING:
             self._setBalancingInput_LL(input.balancing.u_left, input.balancing.u_right)
         elif self.mode == BILBO_Control_Mode.VELOCITY:
-            self._setSpeedInput_LL(input.velocity.forward, input.velocity.turn)
-        elif self.mode == BILBO_Control_Mode.POSITION:
             self._setSpeedInput_LL(input.velocity.forward, input.velocity.turn)
 
     # ------------------------------------------------------------------------------------------------------------------

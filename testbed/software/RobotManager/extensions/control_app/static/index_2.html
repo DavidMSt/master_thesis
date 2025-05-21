@@ -765,81 +765,79 @@
                     }
                     initGraphWidget(element);
                 } else if (item.widget_type === "editable_value") {
-
-                    // 1) build the container
                     element = document.createElement("div");
                     element.className = "gridItem editableValueWidget";
                     element.id = item.id;
                     element.dataset.lockable = item.lockable ? "true" : "false";
                     element.dataset.locked = item.locked ? "true" : "false";
 
+                    // remember the last good value
+                    element.dataset.prevValue = item.value;
 
-                    // render title + input with no autocorrect/suggestions and 'send' enter key
+                    // pick the right input attributes
+                    const isNum = item.is_numeric === true;
                     element.innerHTML = `
-                            <span class="evTitle">${item.title || ''}</span>
-                            <input
-                              type="text"
-                              class="evInput"
-                              value="${item.value}"
-                              autocomplete="off"
-                              autocorrect="off"
-                              autocapitalize="none"
-                              spellcheck="false"
-                              enterkeyhint="send"
-                              ${item.lockable && item.locked ? 'disabled' : ''}
-                            />
-                          `;
+                                          <span class="evTitle">${item.title || ''}</span>
+                                          <input
+                                            type="text"
+                                            inputmode="${isNum ? 'decimal' : 'text'}"
+                                            ${isNum ? 'pattern="[0-9]*[.]?[0-9]*"' : ''}
+                                            class="evInput"
+                                            value="${item.value}"
+                                            autocomplete="off"
+                                            autocorrect="off"
+                                            autocapitalize="none"
+                                            spellcheck="false"
+                                            enterkeyhint="send"
+                                            ${item.lockable && item.locked ? 'disabled' : ''}
+                                          />
+    `;
+                    // const overlay = document.createElement('div');
+                    // overlay.className = 'evOverlay';
+                    // element.appendChild(overlay);
+
+
+                    // ––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 
                     element.style.backgroundColor = item.color;
                     element.style.color = item.textcolor;
+
                     const input = element.querySelector('.evInput');
-                    // handle 'Send' key: blur to close keyboard and send change
+
+                    // input.addEventListener('focus', () => {
+                    //     overlay.classList.add('disabled');
+                    // });
+
+
+                    //  a) on Enter, blur + dispatch change
                     input.addEventListener('keydown', e => {
                         if (e.key === 'Enter') {
                             e.preventDefault();
-                            input.blur(); // close mobile keyboard
-                            // manually trigger change event so the value is sent
+                            input.blur();
                             input.dispatchEvent(new Event('change'));
                         }
                     });
 
-                    // disable native long-press/select on input
-                    input.addEventListener('contextmenu', e => e.preventDefault());
-
-                    // long-press to clear then focus on the input itself
-                    let clearTimer;
-                    input.addEventListener('touchstart', () => {
-                        clearTimer = setTimeout(() => {
-                            if (element.dataset.locked === 'false') {
-                                input.value = '';
-                                input.focus();
-                            }
-                        }, 500);
-                    }, {passive: true});
-                    input.addEventListener('touchend', () => {
-                        clearTimeout(clearTimer);
+                    // b) when they leave the field, if it's empty, restore the old value
+                    input.addEventListener('blur', () => {
+                        // overlay.classList.remove('disabled');
+                        if (input.value.trim() === '') {
+                            const prev = element.dataset.prevValue;
+                            input.value = prev;
+                        }
                     });
 
-                    let widgetTouchStart;
-                    element.addEventListener('touchstart', e => {
-                        if (e.target === input) return;
-                        widgetTouchStart = Date.now();
-                    }, {passive: true});
 
-                    // on touchend, if it was a long press, clear + focus (keyboard opens)
-                    element.addEventListener('touchend', e => {
-                        if (e.target === input) return;
-                        const delta = Date.now() - widgetTouchStart;
-                        if (delta >= 500 && element.dataset.locked === 'false') {
-                            input.value = '';
-                            input.focus();  // this focus in touchend triggers the mobile keyboard
-                        }
-                    }, {passive: true});
-
-                    // change listener if not locked
+                    // c) when they actually change it, update prevValue and send to backend
                     if (!item.lockable || !item.locked) {
                         input.addEventListener('change', e => {
-                            const v = e.target.value;
+                            let v = e.target.value;
+                            // if this widget is numeric, normalize comma → dot
+                            if (isNum) {
+                                v = v.replace(/,/g, '.');
+                            }
+                            // store only if non-empty
+                            if (v.trim() !== '') element.dataset.prevValue = v;
                             if (ws && ws.readyState === WebSocket.OPEN) {
                                 ws.send(JSON.stringify({
                                     type: 'widget',
@@ -851,6 +849,8 @@
                         });
                     }
 
+                    // d) wire up the standard button-like long-press / double-tap / click handlers
+                    attachCustomListeners(element, item.id, 'editable_value');
                 } else if (item.widget_type === "rotary_dial") {
                     // 1) Build container
                     element = document.createElement("div");
@@ -1230,25 +1230,35 @@
                 } else {
                     element = document.createElement("button");
                     element.className = "gridItem buttonItem";
+
+
+                    const label = item.text || item.name;
+                    const icon = item.icon;            // emoji or undefined
+                    const pos = item.icon_position;   // "top" or "center"
+
+                    // dashed border on folders
                     if (item.is_folder) {
                         element.classList.add("folderButton");
-                        element.innerHTML = '<span>' + (item.text || item.name) + '</span>';
-                        if (item.is_proxy) {
-                            let proxyIcon = document.createElement("div");
-                            proxyIcon.className = "proxyIcon";
-                            proxyIcon.textContent = "🌐";
-                            element.appendChild(proxyIcon);
-                        } else {
-                            // now append a real folder icon
-                            const folderIcon = document.createElement("div");
-                            folderIcon.className = "folderIcon";
-                            // folderIcon.textContent = "📁";   // or any SVG/text you like 🗂
-                            folderIcon.textContent = "🗂";   // or any SVG/text you like
-                            element.appendChild(folderIcon);
-                        }
-                    } else {
-                        element.textContent = item.text || item.name;
                     }
+
+                    // build inner content
+                    if (icon && pos === "top") {
+                        // icon in top-right, label centered
+                        element.innerHTML =
+                            `<div class="buttonIcon top">${icon}</div>
+                   <div class="buttonLabel">${label}</div>`;
+                    } else if (icon && pos === "center") {
+                        // icon big center, label underneath
+                        element.classList.add("icon-center");
+                        element.innerHTML =
+                            `<div class="buttonIcon center">${icon}</div>
+                   <div class="buttonLabel below">${label}</div>`;
+                    } else {
+                        // no icon: just label
+                        element.innerHTML = `<div class="buttonLabel">${label}</div>`;
+                    }
+
+
                     element.id = item.id;
                     element.style.backgroundColor = item.color;
                     element.style.color = item.textcolor;
@@ -1499,19 +1509,50 @@
         const longPressThreshold = 500, clickDelay = 250;
         let touchHandled = false;
 
+        // function handleClick() {
+        //     const now = Date.now();
+        //     if (now - lastClickTime < clickDelay) {
+        //         clearTimeout(clickTimer);
+        //         if (ws && ws.readyState === WebSocket.OPEN) {
+        //             ws.send(JSON.stringify({type: 'widget', event_type: baseType + "_double_click", id: id}));
+        //         }
+        //         lastClickTime = 0;
+        //     } else {
+        //         lastClickTime = now;
+        //         clickTimer = setTimeout(function () {
+        //             if (ws && ws.readyState === WebSocket.OPEN) {
+        //                 ws.send(JSON.stringify({type: 'widget', event_type: baseType + "_click", id: id}));
+        //             }
+        //         }, clickDelay);
+        //     }
+        // }
         function handleClick() {
+            // if it's editable_value, focus the input (leave current value)
+            if (baseType === 'editable_value' && element.dataset.locked === 'false') {
+                const inp = element.querySelector('.evInput');
+                if (inp) inp.focus();
+            }
+
             const now = Date.now();
             if (now - lastClickTime < clickDelay) {
                 clearTimeout(clickTimer);
                 if (ws && ws.readyState === WebSocket.OPEN) {
-                    ws.send(JSON.stringify({type: 'widget', event_type: baseType + "_double_click", id: id}));
+                    ws.send(JSON.stringify({
+                        type: 'widget',
+                        event_type: baseType + "_double_click",
+                        id: id
+                    }));
                 }
                 lastClickTime = 0;
             } else {
                 lastClickTime = now;
                 clickTimer = setTimeout(function () {
                     if (ws && ws.readyState === WebSocket.OPEN) {
-                        ws.send(JSON.stringify({type: 'widget', event_type: baseType + "_click", id: id}));
+                        ws.send(JSON.stringify({
+                            type: 'widget',
+                            event_type: baseType + "_click",
+                            id: id
+                        }));
                     }
                 }, clickDelay);
             }
@@ -1523,6 +1564,22 @@
                     ws.send(JSON.stringify({type: 'widget', event_type: baseType + "_long_click", id: id}));
                 }
                 element.dataset.longPressed = "true";
+                // VISUAL FEEDBACK: blink just like the rotary-dial “accepted” animation
+                element.classList.add('accepted');
+
+                element.addEventListener('animationend', () => {
+                    element.classList.remove('accepted');
+                }, {once: true});
+
+
+                // If this is an editable_value, clear + focus the input
+                if (baseType === 'editable_value' && element.dataset.locked === 'false') {
+                    const inp = element.querySelector('.evInput');
+                    if (inp) {
+                        inp.value = '';
+                        inp.focus();
+                    }
+                }
             }, longPressThreshold);
         });
         element.addEventListener("mouseup", function (e) {
@@ -1535,6 +1592,23 @@
                     ws.send(JSON.stringify({type: 'widget', event_type: baseType + "_long_click", id: id}));
                 }
                 element.dataset.longPressed = "true";
+
+                // VISUAL FEEDBACK: blink just like the rotary-dial “accepted” animation
+                element.classList.add('accepted');
+
+                element.addEventListener('animationend', () => {
+                    element.classList.remove('accepted');
+                }, {once: true});
+
+
+                // If this is an editable_value, clear + focus the input
+                if (baseType === 'editable_value' && element.dataset.locked === 'false') {
+                    const inp = element.querySelector('.evInput');
+                    if (inp) {
+                        inp.value = '';
+                        inp.focus();
+                    }
+                }
             }, longPressThreshold);
         }, {passive: true});
         element.addEventListener("touchend", function (e) {

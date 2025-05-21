@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Chart.js example</title>
+</head>
+<style>
+
+    /* Controls styling */
+    #controls {
+        width: 80%;
+        margin-top: 10px;
+        font-family: sans-serif;
+    }
+
+    #controls label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    #windowSize {
+        width: 100%;
+    }
+
+    #plot-container {
+        width: 1000px;
+        height: 200px;
+    }
+
+</style>
+<body>
+<div> Hello</div>
+<!--<div style="width: 700px;">-->
+<div id="plot-container">
+    <canvas id="plot"></canvas>
+    <div id="controls">
+        <label for="windowSize">
+            Window Size (seconds): <span id="windowSizeValue">15</span>s
+        </label>
+        <input
+                type="range"
+                id="windowSize"
+                min="1"
+                max="30"
+                step="1"
+                value="15"
+        />
+    </div>
+</div>
+
+<!-- legacy canvas left in place -->
+<!--    <canvas id="myChart" width="400px" height="100px"></canvas>-->
+<!--<script type="module" src="plot.js"></script>-->
+<script type="module">
+    import {JSPlot} from './plot_gpt.js';
+    document.addEventListener('DOMContentLoaded', () => {
+        const wsUrl = `ws://${window.location.hostname}:8092`;
+        const plot = new JSPlot('plot', wsUrl);
+    });
+</script>
+
+</body>
+</html>

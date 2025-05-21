@@ -1,0 +1,114 @@
+/* widget-styles.css */
+
+.gridItem {
+  display: grid;           /* or whatever grid‐cell defaults you have */
+  place-items: center;     /* center content */
+  border-radius: 4px;
+  /* …any other default spacing, borders, etc… */
+}
+
+.buttonItem {
+  /*border: none;*/
+  border: 2px solid #000;
+  border-radius: 4px;
+  padding: 0.5em 1em;
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.2s ease;
+  font-size: 12px;
+}
+.buttonItem:hover {
+  filter: brightness(1.2);
+}
+.buttonItem.accepted {
+  animation: blink 0.3s ease;
+}
+
+.buttonItem:active {
+  /* move it down slightly */
+  transform: translateY(1px);
+  /* give it an inset shadow / darker look */
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+  /* (optional) darken the background a bit */
+  filter: brightness(0.9);
+}
+
+.buttonItem {
+  transition:
+    background 0.2s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    filter 0.2s ease;
+}
+
+
+.sliderWidget {
+    display: block;
+    width: 100%;
+    /*height: 100%;*/
+    aspect-ratio: auto;
+    /*align-self: stretch;   !* fill the grid row height *!*/
+    flex: 1;
+    position: relative;
+    /*border: none;*/
+    border: 2px solid #444;
+    /*border-radius: 5px;*/
+    background-color: #444;
+    color: inherit;
+    font-size: 16px;
+    cursor: pointer;
+    overflow: hidden;
+    padding-top: 4px; /* replaces the title’s top margin */
+    padding-bottom: 4px; /* replaces the value’s bottom margin */
+    touch-action: none;
+}
+
+.sliderWidget .sliderTitle {
+    position: relative;
+    z-index: 3;
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    /*margin-top: 2px;*/
+}
+
+.sliderWidget .sliderValue {
+    position: relative;
+    z-index: 3;
+    display: block;
+    text-align: center;
+    font-size: 17px;
+    /*margin-bottom: 2px;*/
+}
+
+.sliderWidget .sliderBar {
+    position: absolute;
+    top: 0px;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    opacity: 0.3;
+    background-color: currentColor;
+    z-index: 1;
+}
+
+.sliderWidget .sliderFill {
+    position: absolute;
+
+    height: 100%;
+    width: 50%;
+    background-color: currentColor;
+    opacity: 0.35;
+    z-index: 2;
+    top: 0;
+}
+
+/* ==== Slider ticks ==== */
+.sliderWidget .sliderTick {
+    position: absolute;
+    background-color: currentColor;
+    opacity: 0.5;
+    pointer-events: none;
+}
+/* plus your icon/label tweaks… */

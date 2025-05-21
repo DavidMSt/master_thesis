@@ -108,13 +108,6 @@ class UDP_Socket:
         if self._thread.is_alive():
             self._thread.join(timeout=1)
 
-        if self._thread.is_alive():
-            print("Warning: UDP receive‐thread didn't stop cleanly")
-        else:
-            print(f"Closed UDP socket on {self.address}:{self.port}")
-
-
-
     # ------------------------------------------------------------------------------------------------------------------
     def _thread_fun(self):
         while not self._exit:

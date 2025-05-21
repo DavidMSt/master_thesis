@@ -38,6 +38,7 @@ class _JoystickManagerProcess:
         self.joysticks = {}
         self._thread = threading.Thread(target=self.threadFunction)
         self._exit = False
+        register_exit_callback(self.close)
 
     # ------------------------------------------------------------------------------------------------------------------
     @staticmethod
@@ -53,7 +54,10 @@ class _JoystickManagerProcess:
     # ------------------------------------------------------------------------------------------------------------------
     def close(self, *args, **kwargs):
         self._exit = True
-        self._thread.join()
+        try:
+            self._thread.join(timeout=1)
+        except Exception as e:
+            logger.debug(f"Error while closing joystick manager: {e}")
 
     # ------------------------------------------------------------------------------------------------------------------
     def registerJoystick(self, joystick: pygame.joystick.Joystick):
@@ -91,7 +95,12 @@ class _JoystickManagerProcess:
                 axes = [0] * joystick.get_numaxes()
                 for axis in range(0, joystick.get_numaxes()):
                     axes[axis] = joystick.get_axis(axis)
-                self.axes_dict[(joystick.get_instance_id())] = axes
+                try:
+                    self.axes_dict[(joystick.get_instance_id())] = axes
+                except BrokenPipeError:
+                    self.close()
+                except Exception as e:
+                    self.close()
 
             # Check for events:
             try:
@@ -189,7 +198,7 @@ class JoystickManager:
 
     # === INIT =========================================================================================================
     def __init__(self, accept_unmapped_joysticks: bool = False):
-
+        multiprocessing.set_start_method('spawn')
         register_exit_callback(self.exit)
 
         self.joysticks = {}

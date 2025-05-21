@@ -141,7 +141,6 @@ class BILBO_Experiments:
                 'input': [[float(input.left), float(input.right)] for input in trajectory.inputs.values()],
                 'signals': signals
             },
-            request_response=False,
         )
         success = self.events.finished.wait(flags={'trajectory_id': trajectory.id},
                                             timeout=trajectory.time_vector[-1] + 2)  # type:ignore

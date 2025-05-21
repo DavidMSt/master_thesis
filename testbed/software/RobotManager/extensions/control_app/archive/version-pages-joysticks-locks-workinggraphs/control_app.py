@@ -845,7 +845,7 @@ class ButtonGroup:
             if child.position is None:
                 continue
             col, row = child.position
-            w, h = child.size if hasattr(child, 'size') and child.size else (1, 1)
+            w, h = child.width if hasattr(child, 'size') and child.width else (1, 1)
             for r in range(row, row + h):
                 for c in range(col, col + w):
                     occupancy[r][c] = True
@@ -862,9 +862,9 @@ class ButtonGroup:
           - Widgets with a height > 1 do not cross a page boundary.
         Otherwise, auto-assign a free spot by scanning the grid (across pages) for a free spot.
         """
-        if not hasattr(widget, 'size') or widget.size is None:
-            widget.size = (1, 1)
-        w, h = widget.size
+        if not hasattr(widget, 'size') or widget.width is None:
+            widget.width = (1, 1)
+        w, h = widget.width
         grid_rows, grid_cols = self.grid_size
         total_rows = self.pages * grid_rows
 
@@ -926,7 +926,7 @@ class ButtonGroup:
         Remove any placeholder occupying cells in the area covered by the widget.
         """
         col, row = widget.position
-        w, h = widget.size
+        w, h = widget.width
         cells = [(c, r) for r in range(row, row + h) for c in range(col, col + w)]
         for cell in cells:
             c, r = cell

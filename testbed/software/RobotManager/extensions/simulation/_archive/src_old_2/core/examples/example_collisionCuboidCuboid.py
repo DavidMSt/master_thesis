@@ -23,8 +23,8 @@ class ExampleBoxes(Box):
         """
 
         # plot both
-        cpb1 = CubePlotBox(self.box1.size, self.box1.center, self.box1.get_R(), [0, 0, 1], ax)
-        cpb2 = CubePlotBox(self.box1.size, self.box1.center, self.box1.get_R(), [0, 1, 0], ax)
+        cpb1 = CubePlotBox(self.box1.width, self.box1.center, self.box1.get_R(), [0, 0, 1], ax)
+        cpb2 = CubePlotBox(self.box1.width, self.box1.center, self.box1.get_R(), [0, 1, 0], ax)
 
     def example_plot_collision_points(self):
         """

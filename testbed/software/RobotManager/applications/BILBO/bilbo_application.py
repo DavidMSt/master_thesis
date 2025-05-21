@@ -109,6 +109,5 @@ def run_bilbo_application():
 
     infinite_loop()
 
-
 if __name__ == '__main__':
     run_bilbo_application()

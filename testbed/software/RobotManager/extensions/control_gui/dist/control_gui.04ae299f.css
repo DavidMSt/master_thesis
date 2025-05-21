@@ -1,0 +1,209 @@
+:root {
+  --headbar-height: 6vh;
+  --nav-height: 5vh;
+  --bottom-height: 30vh;
+  --app-bar-width: 10%;
+  --grid-gap: 2px;
+  --grid-rows: 8;
+  --grid-cols: 20;
+  --headbar-rows: 2;
+  --headbar-cols: 25;
+  --navigation_bar-rows: 1;
+  --navigation_bar-cols: 10;
+  --application_bar-rows: 10;
+  --application_bar-cols: 1;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  grid-template-columns: var(--app-bar-width) auto;
+  grid-template-rows: var(--headbar-height) var(--nav-height) 1fr var(--bottom-height);
+  grid-template-areas: "headbar headbar"
+                       "app nav"
+                       "app content"
+                       "app bottombar";
+  gap: 2px;
+  height: 100vh;
+  font-family: Arial, sans-serif;
+  display: grid;
+}
+
+#headbar {
+  background-color: #f99;
+  border: 1px solid #333;
+  grid-area: headbar;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+#headbar_grid {
+  grid-template-rows: repeat(var(--headbar-rows), 1fr);
+  grid-template-columns: repeat(var(--headbar-cols), 1fr);
+  outline: 1px solid #ffffff1a;
+  gap: 1px;
+  width: 100%;
+  height: 100%;
+  display: grid;
+}
+
+.headbar_cell {
+  background: #fff6;
+  border: 1px dashed #333;
+  border-radius: 1px;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  display: flex;
+}
+
+#navigation_bar {
+  background-color: #9cf;
+  border: 1px solid #333;
+  grid-area: nav;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+#navigation_bar_grid {
+  grid-template-rows: repeat(var(--navigation_bar-rows), 1fr);
+  grid-template-columns: repeat(var(--navigation_bar-cols), 1fr);
+  outline: 1px solid #ffffff1a;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  display: grid;
+}
+
+.navigation_bar_cell {
+  background: #fff6;
+  border: 1px dashed #333;
+  border-radius: 1px;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  display: flex;
+}
+
+#application_bar {
+  background-color: #9f9;
+  border: 1px solid #333;
+  grid-area: app;
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+#application_bar_grid {
+  grid-template-rows: repeat(var(--application_bar-rows), 1fr);
+  grid-template-columns: repeat(var(--application_bar-cols), 1fr);
+  outline: 1px solid #ffffff1a;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  display: grid;
+}
+
+.application_bar_cell {
+  background: #fff6;
+  border: 1px dashed #333;
+  border-radius: 1px;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  display: flex;
+}
+
+#bottombar {
+  background-color: #0000;
+  grid-area: bottombar;
+  grid-template-columns: 2fr 1fr;
+  place-items: center;
+  gap: 2px;
+  display: grid;
+}
+
+.bottombar__left {
+  border: 1px solid #000;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding-left: 0;
+  display: flex;
+  overflow-y: auto;
+}
+
+.bottombar__right {
+  border: 1px solid #000;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 5px;
+  display: flex;
+}
+
+#content {
+  background-color: #ff9;
+  grid-area: content;
+  min-width: 0;
+  height: 100%;
+  min-height: 0;
+  padding: 5px;
+}
+
+.grid {
+  grid-template-columns: repeat(var(--grid-cols), 1fr);
+  grid-template-rows: repeat(var(--grid-rows), 1fr);
+  gap: var(--grid-gap);
+  width: 100%;
+  height: 100%;
+  display: grid;
+}
+
+.grid-item {
+  background: #fff6;
+  border: 1px dashed #333;
+  border-radius: 5px;
+  justify-content: center;
+  align-items: center;
+  font-size: 12px;
+  display: flex;
+}
+
+#terminal-path, #terminal-suggestions {
+  color: #fff;
+  background-color: #222;
+  padding: 5px;
+  font-family: monospace;
+  font-size: 13px;
+}
+
+.map-wrapper {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  grid-area: 1 / 1 / 8 / 8;
+  position: relative;
+  overflow: hidden;
+}
+
+.map-wrapper canvas {
+  background-color: #ffffffe6;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+/*# sourceMappingURL=control_gui.04ae299f.css.map */

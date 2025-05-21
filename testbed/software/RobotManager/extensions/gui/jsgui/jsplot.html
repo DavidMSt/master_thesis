@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JSPlot Real-Time Chart</title>
+  <!-- Chart.js library -->
+  <!-- Your plotting frontend -->
+  <script src="jsplot.js" defer></script>
+</head>
+<body>
+  <div id="plot-container">
+    <canvas id="plot"></canvas>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const wsUrl = `ws://${window.location.hostname}:8092`;
+      const plot = new JSPlotChart('chartCanvas', wsUrl);
+
+      // wire up window time input
+      const winInput = document.getElementById('windowTime');
+      winInput.addEventListener('change', () => {
+        const seconds = parseInt(winInput.value, 10);
+        plot.setWindowTime(seconds);
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,10 +1,11 @@
 import ctypes
 import time
 
-from core.utils.exit import register_exit_callback
+from core.utils.delayed_executor import delayed_execution
 # === OWN PACKAGES =====================================================================================================
 from hardware.control_board import RobotControl_Board
 from hardware.stm32.stm32 import resetSTM32
+from robot.bilbo_core import BILBO_Core
 from robot.experiment.bilbo_experiment import BILBO_ExperimentHandler
 from robot.interfaces.bilbo_interfaces import BILBO_Interfaces
 from robot.utilities.bilbo_utilities import BILBO_Utilities
@@ -13,7 +14,7 @@ from core.utils.callbacks import callback_definition, CallbackContainer
 from core.utils.events import EventListener, ConditionEvent, event_definition
 from core.utils.singletonlock.singletonlock import SingletonLock, terminate
 from robot.communication.bilbo_communication import BILBO_Communication
-from robot.control.definitions import BILBO_Control_Mode
+from robot.control.bilbo_control_data import BILBO_Control_Mode
 from robot.control.bilbo_control import BILBO_Control
 from robot.drive.bilbo_drive import BILBO_Drive
 from robot.estimation.bilbo_estimation import BILBO_Estimation
@@ -24,6 +25,7 @@ from core.utils.logging_utils import Logger, setLoggerLevel
 from robot.supervisor.twipr_supervisor import TWIPR_Supervisor
 from core.utils.revisions import get_versions, is_ll_version_compatible
 import robot.lowlevel.stm32_addresses as stm32_addresses
+from core.utils.exit import register_exit_callback
 
 # === GLOBAL VARIABLES =================================================================================================
 
@@ -48,6 +50,8 @@ class BILBO:
     id: str
 
     board: RobotControl_Board
+
+    core: BILBO_Core
     communication: BILBO_Communication
     control: BILBO_Control
     estimation: BILBO_Estimation
@@ -69,8 +73,6 @@ class BILBO:
     _last_update_time: float = 0
     _first_sample_user_message_sent: bool = False
     _eventListener: EventListener
-
-    # _updateTimer: IntervalTimer = IntervalTimer(0.1)
 
     # === INIT =========================================================================================================
     def __init__(self, reset_stm32: bool = False):
@@ -103,6 +105,7 @@ class BILBO:
         # Start the communication module (WI-FI, Serial and SPI)
         self.communication = BILBO_Communication(board=self.board)
 
+        self.core = BILBO_Core()
         # Set up the individual modules
         self.control = BILBO_Control(comm=self.communication)
         self.estimation = BILBO_Estimation(comm=self.communication)
@@ -123,7 +126,7 @@ class BILBO:
                                      experiment_handler=self.experiment_handler,
                                      general_sample_collect_function=self._getSample)
 
-        self.interfaces = BILBO_Interfaces(communication=self.communication, control=self.control)
+        self.interfaces = BILBO_Interfaces(communication=self.communication, control=self.control, core=self.core)
 
         # Test Command
         self.communication.wifi.addCommand(identifier='test',
@@ -135,6 +138,10 @@ class BILBO:
         self.callbacks = BILBO_Callbacks()
         self._eventListener = EventListener(event=self.communication.events.rx_stm32_sample, callback=self.update)
         register_exit_callback(self._shutdown, priority=-1)
+        register_exit_callback(self._shutdownInit, priority=2)
+
+
+        self._startup_phase = True
 
     # === METHODS ======================================================================================================
     def init(self):
@@ -153,7 +160,7 @@ class BILBO:
 
     # ------------------------------------------------------------------------------------------------------------------
     def start(self):
-
+        self.logger.important(f"Start {self.id}")
         # self.communication.start()
         self.utilities.start()
 
@@ -173,13 +180,16 @@ class BILBO:
             self.logger.error("Failed to reset lowlevel firmware")
             raise Exception("Failed to reset lowlevel firmware")
 
-        self.logger.info(f"Start {self.id}")
+
         self.utilities.playTone('notification')
         self.utilities.speak(f'Start {self.id}')
 
         self.communication.startSampleListener()
         self._eventListener.start()
         self.interfaces.start()
+
+        delayed_execution(lambda: setattr(self, '_startup_phase', False), 1)
+
         # self.board.setRGBLEDExtern([0, 0, 0])
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -218,7 +228,7 @@ class BILBO:
         if self.loop_time > 0.18:
             self.logger.warning(f"Loop took {self.loop_time * 1000:.2f} ms")
 
-        if self.update_time > 0.2:
+        if self.update_time > 0.2 and self._startup_phase == False:
             self.logger.warning(f"Update took {self.update_time * 1000:.2f} ms")
 
     # === PRIVATE METHODS ==============================================================================================
@@ -233,15 +243,16 @@ class BILBO:
             timeout=1
         )
 
+    def _shutdownInit(self):
+        self._eventListener.stop()
+        self.utilities.playTone('warning')
+        self.control.setMode(BILBO_Control_Mode.OFF)
+        self.board.setRGBLEDExtern([2, 2, 2])
+
     # ------------------------------------------------------------------------------------------------------------------
     def _shutdown(self, *args, **kwargs):
-        # Beep for audio reference
-        self.utilities.playTone('warning')
         self.logger.info("Shutdown BILBO")
-        self.control.setMode(BILBO_Control_Mode.OFF)
-        self._eventListener.stop()
         time.sleep(1)
-        self.board.setRGBLEDExtern([2, 2, 2])
         self.lock.__exit__(None, None, None)
 
     # ------------------------------------------------------------------------------------------------------------------

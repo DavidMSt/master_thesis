@@ -311,10 +311,11 @@ body {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     grid-template-rows:    repeat(2, 1fr);
-    aspect-ratio: 3 / 1;
+    aspect-ratio: 6/2;
     /*height: 90%;*/
     width: 88%;
-    gap: 5px;
+    max-height: 95%;
+    gap: 4px;
 }
 
 .gridItem {
@@ -358,6 +359,80 @@ button.buttonItem.folderButton {
     font-size: 12px;
     color: #000;
 }
+
+/* container resets */
+button.buttonItem {
+    position: relative;
+    overflow: hidden;
+}
+
+/* folder dashed border (already present, shown here for context) */
+button.buttonItem.folderButton {
+    border: 2px dashed #888;
+}
+
+/* icon in top corner */
+.buttonItem .buttonIcon.top {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 1.2em;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* label styling */
+.buttonItem .buttonLabel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 0.2em;
+    font-size: 1em;
+    word-break: break-word;
+}
+
+
+/* absolutely center the icon in both axes */
+button.buttonItem.icon-center .buttonIcon.center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    font-size: 3em;
+    line-height: 1;
+    transform: translate(-50%, -50%);
+    /* reset any auto‐margins that were creeping in */
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+button.buttonItem.icon-center .buttonLabel.below {
+    position: absolute;
+    font-size: 0.9em;
+    /* same vertical offset you already like: */
+    top: calc(50% + 1.5em + 0.5em);
+    /*bottom: calc(50% + 1.5em + 0.5em);*/
+    /* span the full width of the button: */
+    left: 0;
+    right: 0;
+    /* no transform needed now: */
+    transform: none;
+    margin: 0;
+    /* let the text wrap normally across the whole width: */
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+    padding: 0 0.2em; /* optional breathing room at the sides */
+}
+
+/*!* a little breathing room between icon + label *!*/
+/*button.buttonItem.icon-center .buttonIcon.center {*/
+/*  margin-bottom: 0.1em;*/
+/*}*/
+
 
 .placeholder {
     border: 1px dashed #555;
@@ -1048,6 +1123,20 @@ button.buttonItem.folderButton {
     justify-content: center;
     background-color: #333;
     color: #fff;
+    position: relative;
+}
+
+
+/* transparent layer on top of the input */
+.evOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    /* ensure it’s above the input but below any focus styles you might add */
+    z-index: 1;
 }
 
 .editableValueWidget .evTitle {
@@ -1074,6 +1163,7 @@ button.buttonItem.folderButton {
     user-select: none;
     -webkit-touch-callout: none;
 }
+
 
 /* =================== NEW FOR STATUSWIDGET =================== */
 .statusWidget {
@@ -1297,4 +1387,28 @@ button.buttonItem.folderButton {
     #logWindow {
         padding-bottom: 0;
     }
+}
+
+/* 1a) disable direct taps on the input so the container always gets the event */
+.editableValueWidget .evInput {
+    pointer-events: none;
+}
+
+/* 1b) when the widget is pressed, lighten it like a buttonItem:active */
+.editableValueWidget:active {
+    filter: brightness(0.8);
+    transition: filter 0.1s ease;
+}
+
+/* when the input is focused, make it tabbable & interactive */
+.editableValueWidget .evInput:focus {
+    pointer-events: auto;
+    /* make sure it sits above the overlay */
+    position: relative;
+    z-index: 2;
+}
+
+/* when the overlay is disabled (see JS below), let clicks pass through */
+.editableValueWidget .evOverlay.disabled {
+    pointer-events: none;
 }

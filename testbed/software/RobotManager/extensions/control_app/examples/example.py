@@ -19,7 +19,7 @@ def example():
     # BUTTONS
     folder_buttons = WidgetGroup("buttons", name='Buttons', pages=2)
     root_group.addGroup(folder_buttons)
-    folder_buttons.addWidget(Button("btn1", "Button 1", [1, 1, 1], textcolor=[1, 0, 0], lockable=True, locked=True,
+    folder_buttons.addWidget(Button("btn1", "Button 1", color=[1, 1, 1], textcolor=[1, 0, 0], lockable=True, locked=True,
                                     position={'column': 1, 'row': None},
                                     size=(1, 1)))
 
@@ -32,11 +32,11 @@ def example():
     btn1.callbacks.double_clicked.register(lambda: app_instance.log("Button 1 double clicked"))
     btn1.callbacks.long_pressed.register(lambda: app_instance.log("Button 1 long pressed"))
 
-    folder_buttons.addWidget(Button("btn2", "Button 2", [0.6, 0.5, 0.3], textcolor=[0, 0, 0],
+    folder_buttons.addWidget(Button("btn2", "Button 2", color=[0.6, 0.5, 0.3], textcolor=[0, 0, 0],
                                     position={'column': 2, 'row': None},
                                     size=(2, 2)))
 
-    folder_buttons.addWidget(Button("btn3", "Button 3", [0.2, 0.7, 0.1], textcolor=[0, 0, 0],
+    folder_buttons.addWidget(Button("btn3", "Button 3", color=[0.2, 0.7, 0.1], textcolor=[0, 0, 0],
                                     position={'column': 4, 'row': 0},
                                     size=(1, 2)))
 

@@ -62,18 +62,31 @@ def prepend_parent_path(child_path: str, parent_path: str) -> str:
 
 def rgb_to_hex(rgb):
     """
-    Convert a list of RGB values (0-1 floats) to a hex HTML color.
-    Example: [0.5, 0.2, 0.8] -> "#8033cc"
+    Convert a list of RGB(A) values (0–1 floats) to a hex HTML color.
+    Examples:
+      rgb_to_hex([0.5, 0.2, 0.8])       -> "#8033cc"
+      rgb_to_hex([0.5, 0.2, 0.8, 0.3])  -> "#8033cc4d"
     """
-    return "#{:02x}{:02x}{:02x}".format(
-        int(rgb[0] * 255),
-        int(rgb[1] * 255),
-        int(rgb[2] * 255)
-    )
+
+    def clamp(x):
+        return max(0, min(x, 1))
+
+    if len(rgb) == 3 or len(rgb) == 4:
+        # clamp & scale
+        comps = [int(clamp(c) * 255) for c in rgb]
+        # format RGB
+        hex_str = "#{:02x}{:02x}{:02x}".format(*comps[:3])
+        # if alpha present, append as two hex digits
+        if len(comps) == 4:
+            hex_str += "{:02x}".format(comps[3])
+        return hex_str
+
+    # fallback on bad input
+    return "#FFFFFF"
 
 
 # GROUP_GRID_SIZE = (6, 2)
-GROUP_GRID_SIZE = (2, 6)
+GROUP_GRID_SIZE = (2, 7)
 
 logger = Logger('Control App')
 logger.setLevel('DEBUG')
@@ -87,6 +100,7 @@ class WidgetCallbacks:
 class Widget(ABC):
     widget_id: str
     uid: str
+
     group: WidgetGroup
     app: ControlApp
 
@@ -177,7 +191,8 @@ class SplitButtonCallbacks:
 class Button(Widget):
     callbacks: ButtonCallbacks
 
-    def __init__(self, widget_id, text, color: (str, list) = None, textcolor: (str, list) = None,
+    def __init__(self, widget_id, text, icon: str = None, icon_position: str = 'center', color: (str, list) = None,
+                 textcolor: (str, list) = None,
                  size=None, position=None, lockable=False, locked=False):
 
         super().__init__(widget_id, position=position, size=size, lockable=lockable, locked=locked)
@@ -194,8 +209,12 @@ class Button(Widget):
         if isinstance(textcolor, list):
             textcolor = rgb_to_hex(textcolor)
 
+        assert icon_position in ['center', 'top']
+
         self.color = color  # Button background color
         self.textcolor = textcolor
+        self.icon = icon
+        self.icon_position = icon_position
         self.toggle_state = False  # Example state (e.g. for toggles)
 
         self.callbacks = ButtonCallbacks()
@@ -227,7 +246,8 @@ class Button(Widget):
             "lockable": self.lockable,  # Now only indicates whether locking is supported
             "locked": self.locked,  # NEW: Indicates the current locked state,
             'hidden': self.hidden,
-            # 'hidden': True
+            "icon": self.icon,
+            "icon_position": self.icon_position,
         }
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -366,7 +386,8 @@ class MultiStateButton(Button):
 
     def __init__(self, widget_id, title, states, color=None, current_state=0, textcolor="#fff",
                  size=None, position=None, lockable=False, locked=False):
-        super().__init__(widget_id, title, color, textcolor, size, position, lockable=lockable, locked=locked)
+        super().__init__(widget_id, text=title, color=color, textcolor=textcolor, size=size, position=position,
+                         lockable=lockable, locked=locked)
         self.states = states  # Can be a list of strings or tuples (state, color)
         self.current_state = current_state
         self.callbacks = MultiStateButtonCallbacks()
@@ -467,7 +488,8 @@ class MultiSelectButton(Button):
 
     def __init__(self, widget_id, name, options, value, color=None, title="", textcolor="#fff",
                  size=None, position=None, lockable=False, locked=False):
-        super().__init__(widget_id, name, color, textcolor, size, position, lockable=lockable, locked=locked)
+        super().__init__(widget_id, text=name, color=color, textcolor=textcolor, size=size, position=position,
+                         lockable=lockable, locked=locked)
         self.options = options  # List of dicts with keys "value" and "label"
         self.value = value
         self.title = title  # Optional title displayed above the selected option
@@ -1229,12 +1251,210 @@ class GraphWidget(Widget):
 
 
 # ======================================================================================================================
+class SmallWidget(Widget):
+    grid_widget: GridWidget
+
+    def __init__(self, widget_id, color="#101010", textcolor="#fff", size=None, position=None,
+                 lockable=False, locked=False):
+        super(SmallWidget, self).__init__(widget_id, position=position, size=size, lockable=lockable, locked=locked)
+
+        self.grid_widget = None  # type: ignore
+
+    @abstractmethod
+    def update(self):
+        ...
+
+
+# ======================================================================================================================
+class SmallWidgetButton(SmallWidget):
+    def __init__(self, widget_id, text, color="#101010", textcolor="#fff", size=None, position=None,
+                 lockable=False, locked=False):
+        super(SmallWidgetButton, self).__init__(widget_id, position=position, size=size, lockable=lockable,
+                                                locked=locked)
+
+        if isinstance(color, list):
+            color = rgb_to_hex(color)
+        if isinstance(textcolor, list):
+            textcolor = rgb_to_hex(textcolor)
+        self.color = color
+        self.textcolor = textcolor
+        self.text = text
+
+    async def get_payload(self):
+        payload = {
+            'widget_type': 'small_widget_text',
+            'widget_id': self.widget_id,
+            'data': {
+                'position': self.position,
+                'size': self.size,
+                'text': self.text,
+                'color': self.color,
+                'textcolor': self.textcolor,
+            }
+        }
+        return payload
+
+    def update(self, text=None, color=None, textcolor=None):
+        self.text = text if text else self.text
+        self.color = color if color else self.color
+        self.textcolor = textcolor if textcolor else self.textcolor
+
+    async def on_pressed(self):
+        ...
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+class SmallWidgetText(SmallWidget):
+    def __init__(self, widget_id, text, font_size, color="#101010", textcolor="#fff", size=None, position=None,
+                 lockable=False, locked=False):
+        super(SmallWidgetText, self).__init__(widget_id, position=position, size=size, lockable=lockable, locked=locked)
+
+        if isinstance(color, list):
+            color = rgb_to_hex(color)
+        if isinstance(textcolor, list):
+            textcolor = rgb_to_hex(textcolor)
+        self.text = text
+        self.font_size = font_size
+        self.color = color
+        self.textcolor = textcolor
+
+    async def get_payload(self):
+        payload = {
+            'widget_type': 'small_widget_text',
+            'widget_id': self.widget_id,
+            'data': {
+                'position': self.position,
+                'size': self.size,
+                'text': self.text,
+                'font_size': self.font_size,
+                'color': self.color,
+                'textcolor': self.textcolor,
+            }
+        }
+        return payload
+
+    def update(self, text=None, color=None, textcolor=None):
+        self.text = text if text else self.text
+        self.color = color if color else self.color
+        self.textcolor = textcolor if textcolor else self.textcolor
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+class SmallWidgetNumber(SmallWidget):
+
+    def __init__(self, widget_id, value, precision, color="#101010", textcolor="#fff", size=None, position=None,
+                 lockable=False, locked=False):
+        super(SmallWidgetNumber, self).__init__(widget_id, position=position, size=size, lockable=lockable,
+                                                locked=locked)
+
+        if isinstance(color, list):
+            color = rgb_to_hex(color)
+        if isinstance(textcolor, list):
+            textcolor = rgb_to_hex(textcolor)
+        self.value = value
+        self.precision = precision
+        self.color = color
+        self.textcolor = textcolor
+
+    def update(self, value=None, color=None, textcolor=None):
+        self.value = value if value else self.value
+        self.color = color if color else self.color
+        self.textcolor = textcolor if textcolor else self.textcolor
+
+    async def get_payload(self):
+        payload = {
+            'widget_type': 'small_widget_number',
+            'widget_id': self.widget_id,
+            'data': {
+                'position': self.position,
+                'size': self.size,
+                'value': self.value,
+                'precision': self.precision,
+                'color': self.color,
+            }
+        }
+        return payload
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+class SmallWidgetCircle(SmallWidget):
+    def __init__(self, widget_id, circle_color, color="#101010", textcolor="#fff", size=None, position=None,
+                 lockable=False, locked=False):
+        super(SmallWidgetCircle, self).__init__(widget_id, position=position, size=size, lockable=lockable,
+                                                locked=locked)
+
+        if isinstance(color, list):
+            color = rgb_to_hex(color)
+        if isinstance(textcolor, list):
+            textcolor = rgb_to_hex(textcolor)
+        if isinstance(circle_color, list):
+            circle_color = rgb_to_hex(circle_color)
+        self.circle_color = circle_color
+        self.color = color
+        self.textcolor = textcolor
+
+    async def get_payload(self):
+        payload = {
+            'widget_type': 'small_widget_circle',
+            'widget_id': self.widget_id,
+            'data': {
+                'position': self.position,
+                'size': self.size,
+                'circle_color': self.circle_color,
+                'color': self.color,
+                'textcolor': self.textcolor,
+            }
+        }
+
+    def update(self, circle_color=None, color=None, textcolor=None):
+        if circle_color and isinstance(circle_color, list):
+            circle_color = rgb_to_hex(circle_color)
+
+        if color and isinstance(color, list):
+            color = rgb_to_hex(color)
+
+        if textcolor and isinstance(textcolor, list):
+            textcolor = rgb_to_hex(textcolor)
+
+        self.circle_color = circle_color if circle_color else self.circle_color
+        self.color = color if color else self.color
+        self.textcolor = textcolor if textcolor else self.textcolor
+
+
+# ======================================================================================================================
+class GridWidget(Widget):
+    widgets: list[SmallWidget]
+
+    def __init__(self, widget_id, title, grid_size: tuple, size=None, position=None, lockable=False, locked=False):
+        super(GridWidget, self).__init__(widget_id, position=position, size=size, lockable=lockable, locked=locked)
+
+        self.grid_size = grid_size
+
+        self.widgets = []
+
+    def add_widget(self, widget: SmallWidget, position: dict):
+        ...  # Append position
+        widget.grid_widget = self
+        self.widgets.append(widget)
+
+    def remove_widget(self, widget: SmallWidget):
+        widget.grid_widget = None  # type: ignore
+        self.widgets.remove(widget)
+
+    async def get_payload(self):
+        payload = {
+
+        }
+
+
+# ======================================================================================================================
 class BackButton(Button):
     return_group: WidgetGroup
 
     def __init__(self, widget_id):
         name = 'Back'
-        super(BackButton, self).__init__(widget_id, name, color=[0.5, 0.5, 0.5], textcolor=[0, 0, 0], size=(1, 1),
+        super(BackButton, self).__init__(widget_id, text='', icon='⬅️', color=[0.3, 0.3, 0.3], textcolor=[0, 0, 0],
+                                         size=(1, 1),
                                          position={'page': 0, 'row': 1, 'column': 0})
         self.reserved = True
         self.return_group = None  # type: ignore
@@ -1255,21 +1475,28 @@ class HomeButton(Button):
 
     def __init__(self, widget_id):
         name = 'Home'
-        super(HomeButton, self).__init__(widget_id, name, color=[0.5, 0.5, 0.5], textcolor=[0, 0, 0], size=(1, 1),
-                                         position={'page': 0, 'row': 0, 'column': 0})
+        super(HomeButton, self).__init__(widget_id, name, icon='🏠', color=[0.3, 0.3, 0.3], textcolor=[0.9, 0.9, 0.9],
+                                         size=(1, 1), position={'page': 0, 'row': 0, 'column': 0})
         self.reserved = True
 
 
 # ======================================================================================================================
-class FolderWidget(Widget):
+class FolderWidget(Button):
     callbacks: ButtonCallbacks
     target_group: WidgetGroup
 
-    def __init__(self, widget_id, name, target_group, color: (list, str) = "#55FF55", textcolor: (list, str) = "#fff",
+    def __init__(self, widget_id, name, target_group, icon: str = '🗂', icon_position='center',
+                 color: (list, str) = "#55FF55", textcolor: (list, str) = "#fff",
                  size=(1, 1), position=None, lockable=False, locked=False):
-        super().__init__(widget_id, position, size, lockable, locked)
+        super().__init__(widget_id=widget_id,
+                         text=name,
+                         icon=icon,
+                         icon_position=icon_position,
+                         position=position,
+                         size=size,
+                         lockable=lockable,
+                         locked=locked)
 
-        # IMPORTANT: Initialize the group attribute to avoid uid errors.
         self.name = name
         self.target_group = target_group  # The target WidgetGroup that this folder represents.
 
@@ -1301,9 +1528,13 @@ class FolderWidget(Widget):
             "locked": self.locked,
             'is_folder': True,
             'hidden': self.hidden,
+            'icon': self.icon,
+            'icon_position': self.icon_position,
         }
 
     async def on_pressed(self):
+        if self.lockable and self.locked:
+            return
         # return_data = {
         #     'event': 'switch_set',
         #     'path': self.target_group.get_path(),
@@ -1326,10 +1557,11 @@ class FolderWidget(Widget):
 
 # ======================================================================================================================
 class ProxyFolderWidget(FolderWidget):
-    def __init__(self, widget_id, name, target_group, color: (list, str) = "#55FF55", textcolor: (list, str) = "#fff",
+    def __init__(self, widget_id, name, target_group, icon: str = '🌐', icon_position='center',
+                 color: (list, str) = "#55FF55", textcolor: (list, str) = "#fff",
                  size=(1, 1), position=None, lockable=False, locked=False):
-        super(ProxyFolderWidget, self).__init__(widget_id, name, target_group, color, textcolor, size, position,
-                                                lockable, locked)
+        super(ProxyFolderWidget, self).__init__(widget_id, name, target_group, icon, icon_position,
+                                                color, textcolor, size, position, lockable, locked)
 
         self.is_proxy = True
 
@@ -1357,8 +1589,9 @@ class WidgetGroup:
 
     is_root: bool = False
 
-    def __init__(self, group_id: str, name: str = None, pages: int = 1, color: (list, str) = None,
-                 textcolor: (list, str) = None):
+    def __init__(self, group_id: str, icon: str = '📂', icon_position: str = 'top', name: str = None, pages: int = 1,
+                 color: (list, str) = None, textcolor: (list, str) = None, lockable: bool = False,
+                 locked: bool = False):
         self.group_id = group_id.lower().replace(" ", "")
 
         if name is None:
@@ -1389,9 +1622,13 @@ class WidgetGroup:
 
         self.folder_widget = FolderWidget(widget_id=f"{self.group_id}",
                                           name=self.name,
+                                          icon=icon,
+                                          icon_position=icon_position,
                                           target_group=self,
                                           color=color,
-                                          textcolor=textcolor, )
+                                          textcolor=textcolor,
+                                          lockable=lockable,
+                                          locked=locked)
 
     # ------------------------------------------------------------------------------------------------------------------
     def get_path(self):
@@ -1451,7 +1688,7 @@ class WidgetGroup:
         return widget
 
     # ------------------------------------------------------------------------------------------------------------------
-    def addGroup(self, group: WidgetGroup, position: tuple = None):
+    def addGroup(self, group: WidgetGroup, position: dict = None):
 
         if any(own_group.group_id == group.group_id for own_group in self.child_groups):
             logger.warning(f"Group with ID '{group.group_id}' already exists in group '{self.group_id}'.Not added.")
@@ -2515,6 +2752,37 @@ class InternetStatusBarWidget(StatusBarWidget):
             self.status_bar.updateWidget(self)
 
 
+class JoystickStatusBarWidget(StatusBarWidget):
+    connected: bool
+    widget_type = "joystick"
+
+    def __init__(self, widget_id, connected: bool, size: tuple = (1, 1), position: dict = None):
+        super(JoystickStatusBarWidget, self).__init__(widget_id, size, position)
+        self.connected = connected
+
+    def update(self, connected: bool):
+        self.connected = connected
+        self.status_bar.updateWidget(self)
+
+    async def get_payload(self) -> dict:
+        payload = {
+            'widget_type': 'joystick',
+            'widget_id': self.widget_id,
+            'data': {
+                'position': self.position,
+                'size': self.size,
+                'visible': self.visible,
+                'connected': self.connected
+            }
+        }
+        return payload
+
+    def set_visible(self, visible: bool):
+        if visible != self.visible:
+            self.visible = visible
+            self.status_bar.updateWidget(self)
+
+
 class BatteryLevelStatusBarWidget(StatusBarWidget):
     voltage: float
     percentage: float
@@ -2580,7 +2848,8 @@ class TextStatusBarWidget(StatusBarWidget):
     def __init__(self, widget_id,
                  prefix: str = '',
                  text: str = '',
-                 textcolor: str = '#FFFFFF',
+                 textcolor: (str, list) = '#FFFFFF',
+                 color=None,
                  alignment: str = 'center',
                  font_size: str = 'normal',
                  bold: bool = False,
@@ -2592,9 +2861,16 @@ class TextStatusBarWidget(StatusBarWidget):
 
         assert font_size in ['normal', 'big', 'small']
 
+        if isinstance(textcolor, list):
+            textcolor = rgb_to_hex(textcolor)
+
+        if isinstance(color, list):
+            color = rgb_to_hex(color)
+
         self.prefix = prefix
         self.text = text
         self.textcolor = textcolor
+        self.color = color
         self.alignment = alignment
         self.font_size = font_size
         self.bold = bold
@@ -2618,7 +2894,8 @@ class TextStatusBarWidget(StatusBarWidget):
                 'text': f"<b>{self.prefix}</b> {self.text}" if self.bold_prefix else self.prefix + self.text,
                 'textcolor': self.textcolor,
                 'bold': self.bold,
-                'italic': self.italic
+                'italic': self.italic,
+                'color': self.color
             }
         }
         return payload
@@ -2855,6 +3132,9 @@ class ControlApp:
 
     # ------------------------------------------------------------------------------------------------------------------
     def run_in_thread(self):
+        if self.root_group is None:
+            raise ValueError("App has not been initialized.")
+
         thread = threading.Thread(target=self.run, daemon=True)
         thread.start()
         return thread

@@ -864,7 +864,8 @@ class EventListener:
     def stop(self):
         self._running = False
         self.kill_event.set()
-        self.thread.join()
+        if hasattr(self, 'thread') and self.thread is not None and self.thread.is_alive():
+            self.thread.join()
 
 
 # ======================================================================================================================

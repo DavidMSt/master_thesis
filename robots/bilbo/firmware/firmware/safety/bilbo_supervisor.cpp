@@ -130,6 +130,7 @@ void TWIPR_Supervisor::checkMotors() {
 /* ============================================================================= */
 void TWIPR_Supervisor::checkMotorSpeed() {
 
+
 	if (this->config.control->mode == TWIPR_CONTROL_MODE_OFF) {
 		return;
 	}
@@ -155,7 +156,6 @@ void TWIPR_Supervisor::checkButton() {
 		this->config.control->stop();
 		setError(BILBO_ERROR_WARNING, BILBO_WARNING_MANUAL_STOP);
 		send_warning("Manual Stop");
-
 	}
 }
 

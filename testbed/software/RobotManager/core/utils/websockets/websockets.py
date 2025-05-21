@@ -13,6 +13,7 @@ from core.utils.callbacks import CallbackContainer, callback_definition
 @callback_definition
 class SyncWebsocketServer_Callbacks:
     new_client: CallbackContainer
+    client_disconnected: CallbackContainer
     message: CallbackContainer
 
 
@@ -20,6 +21,7 @@ class SyncWebsocketServer_Callbacks:
 class SyncWebsocketServer_Events:
     new_client: ConditionEvent
     message: ConditionEvent
+    client_disconnected: ConditionEvent
 
 
 class SyncWebsocketServer:
@@ -30,7 +32,7 @@ class SyncWebsocketServer:
         self.host = host
         self.port = port
         self.server = WebsocketServer(host=self.host, port=self.port)
-        self.clients = []  # Store connected clients
+        self.clients = []  # Store the connected clients
         self.running = False
         self.thread = None
 
@@ -75,6 +77,8 @@ class SyncWebsocketServer:
     def _on_client_left(self, client, server):
         if client in self.clients:
             self.clients.remove(client)  # Remove client from the list
+            self.callbacks.client_disconnected.call(client)
+            self.events.client_disconnected.set(client)
 
     def _on_message_received(self, client, server, message):
         message = json.loads(message)
@@ -88,6 +92,15 @@ class SyncWebsocketServer:
         if isinstance(message, dict):
             message = json.dumps(message)
         for client in self.clients:
+            self.server.send_message(client, message)
+
+    def sendToClient(self, client, message):
+        """
+        Send a message to a specific client.
+        """
+        if isinstance(message, dict):
+            message = json.dumps(message)
+        if client in self.clients:
             self.server.send_message(client, message)
 
     def stop(self, *args, **kwargs):

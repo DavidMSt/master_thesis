@@ -2,10 +2,10 @@ from core.device import Device
 from robots.bilbo.robot.bilbo_control import BILBO_Control
 from robots.bilbo.robot.bilbo_core import BILBO_Core
 from robots.bilbo.robot.bilbo_experiment import BILBO_Experiments
-from robots.bilbo.robot.bilbo_interfaces import BILBO_CLI_CommandSet as BILBO_CommandSet
 from robots.bilbo.robot.bilbo_interfaces import BILBO_Interfaces
 from robots.bilbo.robot.bilbo_data import TWIPR_Data, twiprSampleFromDict
 from robots.bilbo.robot.bilbo_definitions import *
+from robots.bilbo.robot.bilbo_utilities import BILBO_Utilities
 
 
 # ======================================================================================================================
@@ -27,19 +27,17 @@ class BILBO:
 
         self.control = BILBO_Control(core=self.core)
         self.experiments = BILBO_Experiments(core=self.core)
-        self.interfaces = BILBO_Interfaces(core=self.core, control=self.control)
+        self.utilities = BILBO_Utilities(core=self.core)
+        self.interfaces = BILBO_Interfaces(core=self.core,
+                                           control=self.control,
+                                           experiments=self.experiments,
+                                           utilities=self.utilities)
 
         self.data = TWIPR_Data()
-
-
-
-        # TODO Remove this from here
-        self.cli_command_set = BILBO_CommandSet(self)
 
         self.device.callbacks.stream.register(self._onStreamCallback)
         self.device.callbacks.disconnected.register(self._disconnected_callback)
 
-        self.interfaces.openLivePlot('theta')
 
     # ------------------------------------------------------------------------------------------------------------------
     def setControlConfiguration(self, config):
@@ -68,16 +66,7 @@ class BILBO:
     #     self.device.function('setDirectInput', data={'left': left, 'right': right})
 
     # ------------------------------------------------------------------------------------------------------------------
-    def test(self, input, timeout=1):
-        try:
-            data = self.device.function(function='test',
-                                        data={'input': input},
-                                        return_type=dict,
-                                        request_response=True,
-                                        timeout=timeout)
-        except TimeoutError:
-            data = None
-        return data
+
 
     # === CLASS METHODS =====================================================================
 
@@ -91,10 +80,6 @@ class BILBO:
     # === COMMANDS ===========================================================================
     def balance(self, state):
         self.control.setControlMode(BILBO_Control_Mode.BALANCING)
-
-    # ------------------------------------------------------------------------------------------------------------------
-    def speak(self, text):
-        self.device.function(function='speak', data={'message': text})
 
     # ------------------------------------------------------------------------------------------------------------------
     def stop(self):

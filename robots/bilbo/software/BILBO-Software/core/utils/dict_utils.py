@@ -283,3 +283,23 @@ if __name__ == "__main__":
     print("\nPerformance evaluation (100,000 iterations):")
     print(f"Baseline unflatten time: {baseline_duration:.4f} seconds")
     print(f"Optimized unflatten time: {optimized_duration:.4f} seconds")
+
+
+
+
+def format_floats(obj, precision=2):
+    float_format = f"{{:.{precision}f}}"
+
+    def _format(o):
+        if isinstance(o, float):
+            return float_format.format(o)
+        elif isinstance(o, dict):
+            return {k: _format(v) for k, v in o.items()}
+        elif isinstance(o, list):
+            return [_format(v) for v in o]
+        elif isinstance(o, tuple):
+            return tuple(_format(v) for v in o)
+        else:
+            return o
+
+    return _format(obj)

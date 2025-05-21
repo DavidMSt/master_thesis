@@ -109,7 +109,8 @@ class WIFI_Connection:
         self._exit = True
         self._udp_server_broadcast.close()
         self._tcp_socket.close()
-        self._thread.join()
+        if hasattr(self, '_thread') and self._thread is not None and self._thread.is_alive():
+            self._thread.join()
 
     # ------------------------------------------------------------------------------------------------------------------
     def disconnect(self):

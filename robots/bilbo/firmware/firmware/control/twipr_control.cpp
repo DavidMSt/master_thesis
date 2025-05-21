@@ -181,8 +181,8 @@ void TWIPR_ControlManager::update() {
 
 //	control_output.u_left = 0;
 //	control_output.u_right = 0;
-	// Write the output to the motors
-	send_info("Control output: %f %f", control_output.u_left, control_output.u_right);
+//	 Write the output to the motors
+//	send_info("Control output: %f %f", control_output.u_left, control_output.u_right);
 
 	this->_setTorque(control_output);
 
@@ -613,9 +613,9 @@ twipr_logging_control_t TWIPR_ControlManager::getSample() {
 	sample.control_mode = this->mode;
 	sample.control_status = this->status;
 
-	sample.config.control_mode = this->mode;
-	sample.config.vic_enabled = this->control_config.vic_enabled;
-	sample.config.tic_enabled = this->control_config.tic_enabled;
+//	sample.config.control_mode = this->mode;
+//	sample.config.vic_enabled = this->control_config.vic_enabled;
+//	sample.config.tic_enabled = this->control_config.tic_enabled;
 
 	sample.external_input = this->_external_input;
 	sample.data = this->_data;

@@ -17,8 +17,8 @@ config_bilbo_normal = BILBO_ControlConfig(
     ),
     external_inputs=ExternalInputsConfig(
         balancing_input_gain={
-            'forward': 0.5,
-            'turn': 0.2
+            'forward': 0.3,
+            'turn': 0.15
         },
         speed_input_gain={
             'forward': 0,
@@ -26,8 +26,10 @@ config_bilbo_normal = BILBO_ControlConfig(
         }
     ),
     balancing_control=TWIPR_Balancing_Control_Config(
-        K=[0.3, 0.42, 0.04, 0.025,
-           0.3, 0.42, 0.04, -0.025],
+        # K=[0.3, 0.42, 0.04, 0.025,
+        #    0.3, 0.42, 0.04, -0.025],
+        K=[0.25, 0.35, 0.04, 0.025,
+           0.25, 0.35, 0.04, -0.025],
         tic=TIC_Config(
             enabled=False,
             ki=0.2,

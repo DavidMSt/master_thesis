@@ -1,5 +1,5 @@
 import {mountTerminal} from './terminal/terminal.js';
-import {GUI_Object, ButtonWidget, SliderWidget} from './objects.js'
+import {GUI_Object, ButtonWidget, SliderWidget, MultiStateButtonWidget} from './objects.js'
 
 export class ControlGui {
 
@@ -80,9 +80,11 @@ export class ControlGui {
                 text: 'Slider 1',
                 title: "Hallo",
                 min: 0,
-                max: 1,
-                value: 0.5,
-                precision: 1,
+                max: 100,
+                value: 50,
+                increment: 10,
+                ticks: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+                // limitToTicks: true,
                 direction: 'vertical',
                 color: 'rgba(79,170,108,0.81)',
                 textColor: '#ffffff',
@@ -93,8 +95,44 @@ export class ControlGui {
             }
         })
 
+        const testslider2 = new SliderWidget({
+            id: 'slider-test2',
+            configuration: {
+                text: 'Slider 2',
+                title: "Hallo",
+                min: 0,
+                max: 1,
+                value: 0.5,
+                increment: 0.1,
+                direction: 'horizontal',
+                automaticReset: 0.5,
+                continuousUpdates: true,
+                color: 'rgba(79,170,108,0.81)',
+            },
+            callbacks: {
+                event: this.onWidgetEvent
+            }
+        })
 
-        this._addObjectToGrid(testSlider, 0, 10, 4, 2);
+        const msb1 = new MultiStateButtonWidget({
+            id: 'msb-test',
+            configuration: {
+                text: 'State',
+                states: ['A', 'B', 'C'],
+                currentState: 0,
+                color: ['rgba(79,170,108,0.81)', 'rgb(191,0,0, 0.9)', 'rgba(88,125,179,0.81)'],
+                textColor: '#ffffff',
+            },
+            callbacks: {
+                event: this.onWidgetEvent
+            }
+        })
+
+        this._addObjectToGrid(msb1, 0, 0, 1, 1);
+
+
+        this._addObjectToGrid(testSlider, 0, 10, 3, 3);
+        this._addObjectToGrid(testslider2, 6, 10, 3, 2);
 
         // 3) Add it to the grid
         this._addObjectToGrid(testButton, 2, 2, 1, 1);

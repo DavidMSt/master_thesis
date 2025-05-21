@@ -23,6 +23,7 @@ uint32_t tick_global = 0;
 
 /* Register Entries */
 
+
 core_utils_RegisterEntry<bool, void> reg_f_reset(&register_map,
 REG_ADDRESS_F_FIRMWARE_RESET, &twipr_firmware, &TWIPR_Firmware::reset);
 

@@ -84,7 +84,7 @@ typedef struct bilbo_logging_control_config_t {
 typedef struct twipr_logging_control_t {
 	twipr_control_status_t control_status;
 	twipr_control_mode_t control_mode;
-	bilbo_logging_control_config_t config;
+//	bilbo_logging_control_config_t config;
 	twipr_control_external_input_t external_input;
 	twipr_control_data_t data;
 } twipr_logging_control_t;

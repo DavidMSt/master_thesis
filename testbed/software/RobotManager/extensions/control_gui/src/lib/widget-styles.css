@@ -5,6 +5,7 @@
     place-items: center; /* center content */
     border-radius: 5px;
     border: 1.5px solid #444;
+    overflow: hidden;
     /* …any other default spacing, borders, etc… */
 }
 
@@ -12,7 +13,9 @@
     /*border: none;*/
     border: 1.5px solid #000;
     /*border-radius: 5px;*/
-    padding: 0.5em 1em;
+    /*padding: 0.5em 1em;*/
+    padding-left: 2px;
+    padding-right: 2px;
     cursor: pointer;
     user-select: none;
     transition: background 0.2s ease;

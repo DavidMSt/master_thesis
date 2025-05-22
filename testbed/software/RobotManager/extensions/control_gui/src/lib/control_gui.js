@@ -65,7 +65,7 @@ export class ControlGui {
         const testButton = new ButtonWidget({
             id: 'btn-test',
             configuration: {
-                text: 'A',
+                text: 'Button A BC',
                 color: 'rgba(79,170,108,0.81)',
                 textColor: '#ffffff',
                 // visible: true,

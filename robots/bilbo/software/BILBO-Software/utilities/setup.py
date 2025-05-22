@@ -1,8 +1,6 @@
 import os
 import sys
 
-from hardware.shields.bilbo_shield_rev2 import generate_shield_config
-
 # Get the directory of the current script
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -19,6 +17,7 @@ from robot.control.bilbo_control_config import generate_default_config
 from robot.hardware import generate_hardware_definition
 from core.utils.files import fileExists, createFile
 from core.utils.json_utils import readJSON, writeJSON
+from hardware.shields.bilbo_shield_rev2 import generate_shield_config
 
 
 # ----------------------------------------------------------------------------------------------------------------------

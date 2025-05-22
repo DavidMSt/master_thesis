@@ -4,6 +4,7 @@
     display: grid; /* or whatever grid‐cell defaults you have */
     place-items: center; /* center content */
     border-radius: 5px;
+    border: 1.5px solid #444;
     /* …any other default spacing, borders, etc… */
 }
 
@@ -43,6 +44,11 @@
 }
 
 
+/* =================================================================================================== */
+/* =====================
+   Base SliderWidget
+   ===================== */
+/* === Core sliderWidget === */
 .sliderWidget {
     display: block;
     width: 100%;
@@ -178,7 +184,6 @@
 }
 
 
-
 /* Multi-State Button Widget Styles */
 .multiStateButtonMain {
     width: 100%;
@@ -234,4 +239,602 @@
 
 .msbIndicator.active {
     background-color: #ccc;
+}
+
+
+/* =======================
+   Multi-Select Widget
+   ======================= */
+.multiSelectWidget {
+    position: relative;
+    border: 1px solid #444;
+    width: 100%;
+    min-width: 48px;
+    background-color: #333;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    touch-action: none;
+    font-size: 16px;
+}
+
+.multiSelectWidget select {
+    width: 100%;
+    background: transparent;
+    color: inherit;
+    border: none;
+    outline: none;
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: center;
+    text-align-last: center;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    font-size: inherit;
+    cursor: pointer;
+}
+
+.msSelectDropdown {
+    position: absolute;
+    right: 5px;
+    bottom: 2px;
+    pointer-events: none;
+    font-size: 9px;
+    color: #ccc;
+}
+
+.msSelectTitle {
+    position: absolute;
+    top: 5px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+    font-weight: bold;
+    pointer-events: none;
+}
+
+
+@keyframes blink-accept {
+    0% {
+        filter: brightness(1);
+    }
+    20% {
+        filter: brightness(1.1);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+.multiSelectWidget.accepted {
+    animation: blink-accept 200ms ease-out;
+}
+
+
+/* ===================================================================
+   RotaryDialWidget (full replacement CSS)
+   =================================================================== */
+
+.rotaryDialWidget {
+    position: relative;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: inherit;
+    color: inherit;
+    touch-action: none;
+    font-size: 14px;
+    padding: 2px;
+    border: 1.5px solid #444;
+}
+
+/* Title */
+.rotaryDialWidget .rotaryTitle {
+    pointer-events: none;
+    user-select: none;
+    font-weight: bold;
+    color: inherit;
+}
+
+/* Value */
+.rotaryDialWidget .dialWrapper .value {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    user-select: none;
+    color: inherit;
+}
+
+/* Top mode: title above, dial 80% */
+.rotaryDialWidget[data-title-position="top"] {
+    flex-direction: column;
+}
+
+.rotaryDialWidget[data-title-position="top"] .rotaryTitle {
+    position: static;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.rotaryDialWidget[data-title-position="top"] .dialWrapper {
+    width: 80%;
+    height: 80%;
+}
+
+.rotaryDialWidget[data-title-position="top"] .dialWrapper .value {
+    font-size: 1em;
+}
+
+/* Left mode: title to the left, dial 80% */
+.rotaryDialWidget[data-title-position="left"] {
+    flex-direction: row;
+}
+
+.rotaryDialWidget[data-title-position="left"] .rotaryTitle {
+    position: static;
+    margin-right: 8px;
+    font-size: 12px;
+}
+
+.rotaryDialWidget[data-title-position="left"] .dialWrapper {
+    width: 80%;
+    height: 80%;
+}
+
+.rotaryDialWidget[data-title-position="left"] .dialWrapper .value {
+    font-size: 1em;
+}
+
+/* Canvas setup */
+.rotaryDialWidget .dialWrapper {
+    position: relative;
+}
+
+.rotaryDialWidget .dialWrapper canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+
+/* Dragging & accepted animations */
+.rotaryDialWidget.dragging {
+    filter: brightness(1.25);
+    transition: filter 100ms ease-out;
+}
+
+.rotaryDialWidget.accepted {
+    animation: blink-accept 200ms ease-out;
+}
+
+@keyframes blink-accept {
+    0% {
+        filter: brightness(1);
+    }
+    20% {
+        filter: brightness(1.3);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+/* blink animation */
+@keyframes blink-accept {
+    0% {
+        filter: brightness(1);
+    }
+    20% {
+        filter: brightness(1.3);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+/* blink animation */
+@keyframes blink-accept {
+    0% {
+        filter: brightness(1);
+    }
+    20% {
+        filter: brightness(1.3);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+/* blink animation */
+@keyframes blink-accept {
+    0% {
+        filter: brightness(1);
+    }
+    20% {
+        filter: brightness(1.3);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+
+/* dragging = bright, accepted = blink */
+.dragging {
+    filter: brightness(1.25);
+    transition: filter 100ms ease-out;
+}
+
+.accepted {
+    animation: blink-accept 200ms ease-out;
+}
+
+/* Continuous‐update icon */
+.continuousIcon {
+    position: absolute;
+    bottom: 2px; /* or whatever padding you prefer */
+    right: 2px;
+    font-size: 0.6em;
+    opacity: 0.7;
+    pointer-events: none;
+    user-select: none;
+}
+
+/* —————————————————————————————
+   ClassicSliderWidget styles (UPDATED)
+   ————————————————————————————— */
+
+/*!* container *!*/
+/*.classicSliderWidget {*/
+/*    position: relative;*/
+/*    display: flex;*/
+/*    padding: 8px;*/
+/*    box-sizing: border-box;*/
+/*    background-color: inherit;*/
+/*    color: inherit;*/
+/*    overflow: hidden;*/
+/*}*/
+
+/*!* title *!*/
+/*.classicSliderWidget[data-title-position="top"] {*/
+/*    flex-direction: column;*/
+/*}*/
+
+/*.classicSliderWidget[data-title-position="left"] {*/
+/*    flex-direction: row;*/
+/*}*/
+
+/*.csTitle {*/
+/*    font-size: 12px;*/
+/*    font-weight: bold;*/
+/*}*/
+
+/*.classicSliderWidget[data-title-position="top"] .csTitle {*/
+/*    margin-bottom: 4px;*/
+/*}*/
+
+/*.classicSliderWidget[data-title-position="left"] .csTitle {*/
+/*    margin-right: 8px;*/
+/*}*/
+
+/*!* main area *!*/
+/*.csMain {*/
+/*    display: flex;*/
+/*    width: 100%;*/
+/*    height: 100%;*/
+/*    justify-content: center;*/
+/*    align-items: center;*/
+/*}*/
+
+/*!* horizontal: value underneath *!*/
+/*.classicSliderWidget[data-value-position="center"] .csMain {*/
+/*    flex-direction: column;*/
+/*}*/
+
+/*.classicSliderWidget[data-value-position="center"] .csValue {*/
+/*    margin-top: 4px;*/
+/*}*/
+
+/*!* horizontal: value right *!*/
+/*.classicSliderWidget[data-value-position="right"] .csMain {*/
+/*    flex-direction: row;*/
+/*}*/
+
+/*.classicSliderWidget[data-value-position="right"] .csValue {*/
+/*    margin-left: 8px;*/
+/*}*/
+
+/*!* value text *!*/
+/*.csValue {*/
+/*    font-size: 14px;*/
+/*}*/
+
+/*!* — track container — *!*/
+/*!* full-width/tall but padded by handle radius (8px each side) *!*/
+/*.csSliderContainer {*/
+/*    position: relative;*/
+/*    width: 100%;*/
+/*    height: 8px;*/
+/*    padding: 0 8px;*/
+/*    box-sizing: border-box;*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="vertical"] .csSliderContainer {*/
+/*    width: 8px;*/
+/*    height: 100%;*/
+/*    padding: 8px 0;*/
+/*}*/
+
+/*!* stem & fill *!*/
+/*.csStem,*/
+/*.csFill {*/
+/*    position: absolute;*/
+/*    border-radius: 4px;*/
+/*}*/
+
+/*.csStem {*/
+/*    background-color: var(--stem-color);*/
+/*}*/
+
+/*.csFill {*/
+/*    background-color: var(--handle-color);*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="horizontal"] .csStem {*/
+/*    top: 50%;*/
+/*    left: 0;*/
+/*    width: 100%;*/
+/*    height: 4px;*/
+/*    transform: translateY(-50%);*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="horizontal"] .csFill {*/
+/*    top: 0;*/
+/*    left: 0;*/
+/*    height: 100%;*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="vertical"] .csStem {*/
+/*    top: 0;*/
+/*    left: 50%;*/
+/*    width: 4px;*/
+/*    height: 100%;*/
+/*    transform: translateX(-50%);*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="vertical"] .csFill {*/
+/*    left: 0;*/
+/*    bottom: 0;*/
+/*    width: 100%;*/
+/*}*/
+
+/*!* ticks — now locked to the padded ends *!*/
+/*.csTick {*/
+/*    position: absolute;*/
+/*    background-color: var(--stem-color);*/
+/*    pointer-events: none;*/
+/*    opacity: 1;*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="horizontal"] .csTick {*/
+/*    top: 0;*/
+/*    width: 1px;*/
+/*    height: 100%;*/
+/*    transform: translateX(-50%);*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="vertical"] .csTick {*/
+/*    left: 0;*/
+/*    height: 1px;*/
+/*    width: 100%;*/
+/*    transform: translateY(-50%);*/
+/*}*/
+
+/*!* handle *!*/
+/*.csHandle {*/
+/*    position: absolute;*/
+/*    width: 16px;*/
+/*    height: 16px;*/
+/*    background-color: var(--handle-color);*/
+/*    border-radius: 50%;*/
+/*    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);*/
+/*    pointer-events: none;*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="horizontal"] .csHandle {*/
+/*    top: 50%;*/
+/*    transform: translate(-50%, -50%);*/
+/*}*/
+
+/*.classicSliderWidget[data-direction="vertical"] .csHandle {*/
+/*    left: 50%;*/
+/*    transform: translate(-50%, 50%);*/
+/*}*/
+
+/*.classicSliderWidget.accepted {*/
+/*    animation: blink-accept 200ms ease-out;*/
+/*}*/
+
+/* —————————————————————————————
+   ClassicSliderWidget styles (UPDATED)
+   ————————————————————————————— */
+
+/* container */
+.classicSliderWidget {
+    position: relative;
+    display: flex;
+    padding: 8px;
+    box-sizing: border-box;
+    background-color: inherit;
+    color: inherit;
+    overflow: hidden;
+}
+
+/* title positioning */
+.classicSliderWidget[data-title-position="top"] {
+    flex-direction: column;
+}
+.classicSliderWidget[data-title-position="left"] {
+    flex-direction: row;
+}
+.csTitle {
+    font-size: 12px;
+    font-weight: bold;
+}
+.classicSliderWidget[data-title-position="top"] .csTitle {
+    margin-bottom: 4px;
+}
+.classicSliderWidget[data-title-position="left"] .csTitle {
+    margin-right: 8px;
+}
+
+/* main area */
+.csMain {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+/* value underneath vs right */
+.classicSliderWidget[data-value-position="center"] .csMain {
+    flex-direction: column;
+}
+.classicSliderWidget[data-value-position="center"] .csValue {
+    margin-top: 4px;
+}
+.classicSliderWidget[data-value-position="right"] .csMain {
+    flex-direction: row;
+}
+.classicSliderWidget[data-value-position="right"] .csValue {
+    margin-left: 8px;
+}
+
+/* value text with reserved width */
+.csValue {
+    font-size: 14px;
+    display: inline-block;
+    min-width: var(--value-width);
+    text-align: inherit; /* will follow flow: right or center */
+}
+
+/* — track container — */
+.csSliderContainer {
+    position: relative;
+    width: 100%;
+    height: 8px;
+    padding: 0 8px;
+    box-sizing: border-box;
+}
+.classicSliderWidget[data-direction="vertical"] .csSliderContainer {
+    width: 8px;
+    height: 100%;
+    padding: 8px 0;
+}
+
+/* stem & fill */
+.csStem,
+.csFill {
+    position: absolute;
+    border-radius: 4px;
+}
+.csStem {
+    background-color: var(--stem-color);
+}
+.csFill {
+    background-color: var(--handle-color);
+}
+.classicSliderWidget[data-direction="horizontal"] .csStem {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 4px;
+    transform: translateY(-50%);
+}
+.classicSliderWidget[data-direction="horizontal"] .csFill {
+    top: 0;
+    left: 0;
+    height: 100%;
+}
+.classicSliderWidget[data-direction="vertical"] .csStem {
+    top: 0;
+    left: 50%;
+    width: 4px;
+    height: 100%;
+    transform: translateX(-50%);
+}
+.classicSliderWidget[data-direction="vertical"] .csFill {
+    left: 0;
+    bottom: 0;
+    width: 100%;
+}
+
+/* ticks — locked to the padded ends */
+.csTick {
+    position: absolute;
+    background-color: var(--stem-color);
+    pointer-events: none;
+    opacity: 1;
+}
+.classicSliderWidget[data-direction="horizontal"] .csTick {
+    top: 0;
+    width: 1px;
+    height: 100%;
+    transform: translateX(-50%);
+}
+.classicSliderWidget[data-direction="vertical"] .csTick {
+    left: 0;
+    height: 1px;
+    width: 100%;
+    transform: translateY(-50%);
+}
+
+/* handle */
+.csHandle {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background-color: var(--handle-color);
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+}
+.classicSliderWidget[data-direction="horizontal"] .csHandle {
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+.classicSliderWidget[data-direction="vertical"] .csHandle {
+    left: 50%;
+    transform: translate(-50%, 50%);
+}
+
+/* animations */
+.classicSliderWidget.accepted {
+    animation: blink-accept 200ms ease-out;
+}
+@keyframes blink-accept {
+    0%   { filter: brightness(1); }
+    20%  { filter: brightness(1.3); }
+    100% { filter: brightness(1); }
+}
+
+/* continuous‐update icon */
+.continuousIcon {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    font-size: 0.6em;
+    opacity: 0.7;
+    pointer-events: none;
+    user-select: none;
 }

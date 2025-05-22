@@ -15,7 +15,7 @@ if top_level_module not in sys.path:
 from hardware.board_config import generate_board_config
 from hardware.stm32.firmware_update import compileSTM32Flash
 from paths import settings_file_path, robot_path
-from robot.control.config import generate_default_control_config
+from robot.control.bilbo_control_config import generate_default_config
 from robot.hardware import generate_hardware_definition
 from core.utils.files import fileExists, createFile
 from core.utils.json_utils import readJSON, writeJSON
@@ -86,7 +86,7 @@ def setup_interactive():
         print(f"Hardware config generated for size {hardware_config}")
 
     # 4. Generate Control Config
-    generate_default_control_config()
+    generate_default_config(hardware_config)
     print(f"Default control config generated for size {hardware_config}")
 
     # Compile stm32 flash
@@ -122,7 +122,7 @@ def setup(board_rev=None, hardware_config=None, robot_id=None):
 
     generate_board_config(f'rev{board_rev}')
     generate_hardware_definition(size=hardware_config)
-    generate_default_control_config()
+    generate_default_config(hardware_config)
     write_settings_file(robot_id, board_rev, hardware_config)
 
     # Compile stm32 flash

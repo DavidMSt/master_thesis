@@ -1,5 +1,13 @@
 import {mountTerminal} from './terminal/terminal.js';
-import {GUI_Object, ButtonWidget, SliderWidget, MultiStateButtonWidget} from './objects.js'
+import {
+    GUI_Object,
+    ButtonWidget,
+    SliderWidget,
+    MultiStateButtonWidget,
+    MultiSelectWidget,
+    RotaryDialWidget,
+    ClassicSliderWidget
+} from './objects.js'
 
 export class ControlGui {
 
@@ -23,6 +31,8 @@ export class ControlGui {
         this.application_bar = document.getElementById(container_ids.application_bar);
         this.application_bar_grid = document.getElementById(container_ids.application_bar_grid);
         this.terminal_container = document.getElementById(container_ids.terminal_container);
+        this.robot_status_bar = document.getElementById(container_ids.robot_status_bar);
+        this.robot_status_bar_grid = document.getElementById(container_ids.robot_status_bar_grid);
 
         this.rows = +getComputedStyle(document.documentElement)
             .getPropertyValue('--grid-rows');
@@ -44,13 +54,18 @@ export class ControlGui {
         this.application_bar_cols = +getComputedStyle(document.documentElement)
             .getPropertyValue('--application_bar-cols');
 
+        this.robot_status_bar_rows = +getComputedStyle(document.documentElement)
+            .getPropertyValue('--robot_status_bar-rows');
+        this.robot_status_bar_cols = +getComputedStyle(document.documentElement)
+            .getPropertyValue('--robot_status_bar-cols');
+
         this.occupied_grid_cells = new Set(); // Store "row,col" strings for a quick lookup
 
 
         const testButton = new ButtonWidget({
             id: 'btn-test',
             configuration: {
-                text: 'Button 1',
+                text: 'A',
                 color: 'rgba(79,170,108,0.81)',
                 textColor: '#ffffff',
                 // visible: true,
@@ -63,7 +78,7 @@ export class ControlGui {
         const testButton2 = new ButtonWidget({
             id: 'btn-test2',
             configuration: {
-                text: 'Button 2',
+                text: 'B',
                 color: 'rgba(79,170,108,0.81)',
                 textColor: '#ffffff',
                 // visible: true,
@@ -78,6 +93,7 @@ export class ControlGui {
             id: 'slider-test',
             configuration: {
                 text: 'Slider 1',
+                style: 'app',
                 title: "Hallo",
                 min: 0,
                 max: 100,
@@ -85,9 +101,10 @@ export class ControlGui {
                 increment: 10,
                 ticks: [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
                 // limitToTicks: true,
-                direction: 'vertical',
+                direction: 'horizontal',
                 color: 'rgba(79,170,108,0.81)',
                 textColor: '#ffffff',
+                continuousUpdates: false
 
             },
             callbacks: {
@@ -98,16 +115,19 @@ export class ControlGui {
         const testslider2 = new SliderWidget({
             id: 'slider-test2',
             configuration: {
-                text: 'Slider 2',
+                style: 'classic',
                 title: "Hallo",
+                titlePosition: "left",
+                valuePosition: 'center',
                 min: 0,
                 max: 1,
                 value: 0.5,
                 increment: 0.1,
-                direction: 'horizontal',
-                automaticReset: 0.5,
+                direction: 'vertical',
+                textColor: '#000',
+                // automaticReset: 0.5,
                 continuousUpdates: true,
-                color: 'rgba(79,170,108,0.81)',
+                color: 'rgba(79,170,108,0.5)',
             },
             callbacks: {
                 event: this.onWidgetEvent
@@ -128,21 +148,135 @@ export class ControlGui {
             }
         })
 
-        this._addObjectToGrid(msb1, 0, 0, 1, 1);
+        // assume you’ve already imported MultiSelectWidget
+        const msw1 = new MultiSelectWidget({
+            id: 'msw1',
+            configuration: {
+                visible: true,                  // show it
+                color: [
+                    'rgba(170,146,10,0.81)',
+                    'rgba(10,170,109,0.81)',
+                    'rgba(170,10,101,0.81)',
+                ],
+                textColor: '#fafafa',           // text & dropdown arrow
+                title: 'Fruit',          // optional title
+                titlePosition: 'top',
+                options: [
+                    {value: 'apple', label: 'Apple'},
+                    {value: 'banana', label: 'Banana'},
+                    {value: 'cherry', label: 'Cherry'}
+                ],
+                value: 'apple',                // default selected
+                lockable: true,                 // allow lock/unlock
+                locked: false                   // start unlocked
+            },
+            callbacks: {
+                event: (payload) => {
+                    // payload = { id: 'msw1', event: 'multi_select_change'|'multi_select_long_click', data: { value } }
+                    console.log('MultiSelectWidget event:', payload);
+                }
+            }
+        });
+
+        // 1) Define your “opts” object
+
+        const volumeDial = new RotaryDialWidget({
+            id: 'volumeDial',         // unique within your page
+            configuration: {
+                title: 'Volume',
+                titlePosition: 'left',
+                min: 0,
+                max: 10,
+                value: 5,
+                ticks: [0, 2.5, 5, 7.5, 10],
+                increment: 0.5,
+                color: 'rgba(34,34,34,0.36)',          // background behind the dial
+                dialColor: '#0F0',      // the “filled” arc & tick marks
+                textColor: '#fff',      // title & value color
+                continuousUpdates: false,
+                // limitToTicks: true,
+                visible: true,
+                dialWidth: 5,
+            },
+            callbacks: {
+                event: ({id, event, data}) => {
+                    console.log(`Rotary ${id} →`, event, data);
+                    // e.g. send over WebSocket, update your model, etc.
+                }
+            }
+        });
+
+        this._addObjectToGrid(volumeDial, 5, 5, 4, 2);
+
+        const cs1 = new ClassicSliderWidget({
+            id: 'mySlider',
+            configuration: {
+                title: 'Volume',
+                titlePosition: 'top',      // or 'top'
+                valuePosition: 'center',     // or 'center'
+                backgroundColor: 'rgba(34,34,34,0.3)',
+                stemColor: '#555',
+                handleColor: '#cc0085',
+                textColor: '#fff',
+                min: 0,
+                max: 10,
+                value: 5,
+                increment: 1,
+                ticks: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                direction: 'vertical',      // or 'horizontal'
+                continuousUpdates: true,
+            },
+            callbacks: {event: this.onWidgetEvent}
+        });
+
+        const cs2 = new ClassicSliderWidget({
+            id: 'mySlider2',
+            configuration: {
+                title: 'Volume',
+                titlePosition: 'left',      // or 'top'
+                valuePosition: 'right',     // or 'center'
+                backgroundColor: 'rgba(34,34,34,0.3)',
+                stemColor: '#555',
+                handleColor: '#cc0085',
+                textColor: '#fff',
+                min: -1,
+                max: 1,
+                value: 0,
+                increment: 0.1,
+                // ticks: [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                direction: 'horizontal',      // or 'horizontal'
+                continuousUpdates: false,
+            },
+            callbacks: {event: this.onWidgetEvent}
+        });
 
 
-        this._addObjectToGrid(testSlider, 0, 10, 3, 3);
-        this._addObjectToGrid(testslider2, 6, 10, 3, 2);
+        this._addObjectToGrid(cs1, 0, 5, 2, 5);
+
+
+        this._addObjectToGrid(msw1, 4, 0, 3, 2);
+
+
+        this._addObjectToGrid(msb1, 0, 0, 2, 2);
+
+
+        this._addObjectToGrid(testSlider, 0, 10, 6, 1);
+        this._addObjectToGrid(cs2, 2, 10, 6, 1);
+        this._addObjectToGrid(testslider2, 6, 10, 6, 4);
 
         // 3) Add it to the grid
-        this._addObjectToGrid(testButton, 2, 2, 1, 1);
-        this._addObjectToGrid(testButton2, 0, 2, 1, 1);
+        this._addObjectToGrid(testButton, 2, 2, 2, 2);
+        this._addObjectToGrid(testButton2, 0, 2, 2, 2);
 
         this._initializeHeadBarGrid()
         this._initializeNavigationBarGrid()
         this._initializeApplicationBarGrid()
+        this._initializeRobotStatusBarGrid()
 
         this._initializeTerminal();
+
+
+        this._fillContentGrid();
 
         this._connect(wsUrl);
     }
@@ -158,6 +292,16 @@ export class ControlGui {
         console.log(event)
     }
 
+    _initializeRobotStatusBarGrid() {
+        for (let row = 0; row < this.robot_status_bar_rows; row++) {
+            for (let col = 0; col < this.robot_status_bar_cols; col++) {
+                const gridItem = document.createElement('div');
+                gridItem.className = 'robot_status_bar_cell';
+                gridItem.textContent = `${row},${col}`;  // Optional: for debugging
+                this.robot_status_bar_grid.appendChild(gridItem);
+            }
+        }
+    }
 
     _initializeApplicationBarGrid() {
         for (let row = 0; row < this.application_bar_rows; row++) {
@@ -256,17 +400,19 @@ export class ControlGui {
         return cells;
     }
 
-    _initializeGrid(grid) {
+    _fillContentGrid(grid) {
 
+        console.log('Initializing grid with', this.rows, 'rows and', this.cols, 'cols');
 
-        console.log('Initializing grid with', rows, 'rows and', cols, 'cols');
-
-        for (let row = 0; row < rows; row++) {
-            for (let col = 0; col < cols; col++) {
-                const gridItem = document.createElement('div');
-                gridItem.className = 'grid-item';
-                gridItem.textContent = `${row},${col}`;  // Optional: for debugging
-                grid.appendChild(gridItem);
+        for (let row = 0; row < this.rows; row++) {
+            for (let col = 0; col < this.cols; col++) {
+                if (!this.occupied_grid_cells.has(`${row},${col}`)) {
+                    const gridItem = document.createElement('div');
+                    gridItem.className = 'grid-item';
+                    gridItem.textContent = `${row},${col}`;
+                    gridItem.style.fontSize = '6px';
+                    this.grid.appendChild(gridItem);
+                }
             }
         }
 

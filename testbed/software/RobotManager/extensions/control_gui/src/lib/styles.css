@@ -2,16 +2,21 @@
 :root {
     /* Layout variables */
     --headbar-height: 6vh;
-    --nav-height: 5vh;
-    --bottom-height: 30vh; /* height of the new bottom bar */
+    --robot-status-bar-height: 5vh;
+    --nav-height: 3.5vh;
+    --bottom-height: 23vh; /* height of the new bottom bar */
     --app-bar-width: 10%;
     --grid-gap: 2px;
-    --grid-rows: 8;
-    --grid-cols: 20;
+
+    --grid-rows: 16;
+    --grid-cols: 50;
+
     --headbar-rows: 2;
     --headbar-cols: 25;
     --navigation_bar-rows: 1;
     --navigation_bar-cols: 10;
+    --robot_status_bar-rows: 2;
+    --robot_status_bar-cols: 20;
     --application_bar-rows: 10;
     --application_bar-cols: 1;
 }
@@ -35,11 +40,13 @@ body {
     grid-template-columns: var(--app-bar-width) auto;
     grid-template-rows:
     var(--headbar-height)
+    var(--robot-status-bar-height)
     var(--nav-height)
     1fr
     var(--bottom-height);
     grid-template-areas:
     "headbar headbar"
+    "app     robot_status_bar"
     "app     nav"
     "app     content"
     "app     bottombar";
@@ -99,6 +106,36 @@ body {
 }
 
 .navigation_bar_cell {
+    border: 1px dashed #333;
+    display: flex;
+    font-size: 12px;
+    background: rgba(255, 255, 255, 0.4);
+    align-items: center;
+    justify-content: center;
+    border-radius: 1px;
+}
+
+/* Navigation bar */
+#robot_status_bar {
+    grid-area: robot_status_bar;
+    background-color: rgba(204, 0, 133, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid #333;
+}
+
+#robot_status_bar_grid {
+    display: grid;
+    grid-template-rows: repeat(var(--robot_status_bar-rows), 1fr);
+    grid-template-columns: repeat(var(--robot_status_bar-cols), 1fr);
+    gap: 2px;
+    height: 100%;
+    width: 100%;
+    outline: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.robot_status_bar_cell {
     border: 1px dashed #333;
     display: flex;
     font-size: 12px;

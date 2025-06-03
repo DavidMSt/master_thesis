@@ -6,6 +6,7 @@ from core.utils.logging_utils import Logger
 import platform
 import subprocess
 import re
+import psutil
 
 logger = Logger('network')
 
@@ -72,6 +73,47 @@ def getInterfaceIP(interface_name):
 import socket
 
 
+# def getAllPrivateIPs():
+#     """
+#     Retrieves private IP addresses grouped by common subnet origins:
+#     - '192.*' (Local Wi-Fi/LAN),
+#     - '169.*' (USB or self-assigned),
+#     - '172.*' (Often WSL or Docker),
+#     - '10.*' (Common in enterprise/virtual setups).
+#
+#     :return: A dictionary with keys: 'local_ips', 'usb_ips', 'wsl_ips', 'enterprise_ips',
+#              each containing a list of corresponding IP addresses.
+#     """
+#     ip_groups = {
+#         "local_ips": [],
+#         "usb_ips": [],
+#         "wsl_ips": [],
+#         "enterprise_ips": []
+#     }
+#     try:
+#         hostname = socket.gethostname()
+#         print(f"Retrieving private IP addresses from {hostname}...")
+#         if '.' not in hostname:
+#             hostname = f"{hostname}.local"
+#
+#         ip_addresses = socket.gethostbyname_ex(hostname)[2]
+#
+#         for ip in ip_addresses:
+#             if ip.startswith("192."):
+#                 ip_groups["local_ips"].append(ip)
+#             elif ip.startswith("169."):
+#                 ip_groups["usb_ips"].append(ip)
+#             elif ip.startswith("172."):
+#                 ip_groups["wsl_ips"].append(ip)
+#             elif ip.startswith("10."):
+#                 ip_groups["enterprise_ips"].append(ip)
+#     except Exception as e:
+#         print(f"Error retrieving IPs: {e}")
+#         return ip_groups  # Still return structure, just empty
+#
+#     return ip_groups
+
+
 def getAllPrivateIPs():
     """
     Retrieves private IP addresses grouped by common subnet origins:
@@ -89,26 +131,22 @@ def getAllPrivateIPs():
         "wsl_ips": [],
         "enterprise_ips": []
     }
+
     try:
-        hostname = socket.gethostname()
-        print(f"Retrieving private IP addresses from {hostname}...")
-        if '.' not in hostname:
-            hostname = f"{hostname}.local"
-
-        ip_addresses = socket.gethostbyname_ex(hostname)[2]
-
-        for ip in ip_addresses:
-            if ip.startswith("192."):
-                ip_groups["local_ips"].append(ip)
-            elif ip.startswith("169."):
-                ip_groups["usb_ips"].append(ip)
-            elif ip.startswith("172."):
-                ip_groups["wsl_ips"].append(ip)
-            elif ip.startswith("10."):
-                ip_groups["enterprise_ips"].append(ip)
+        for iface, addrs in psutil.net_if_addrs().items():
+            for addr in addrs:
+                if addr.family == socket.AF_INET:
+                    ip = addr.address
+                    if ip.startswith("192."):
+                        ip_groups["local_ips"].append(ip)
+                    elif ip.startswith("169."):
+                        ip_groups["usb_ips"].append(ip)
+                    elif ip.startswith("172."):
+                        ip_groups["wsl_ips"].append(ip)
+                    elif ip.startswith("10."):
+                        ip_groups["enterprise_ips"].append(ip)
     except Exception as e:
         print(f"Error retrieving IPs: {e}")
-        return ip_groups  # Still return structure, just empty
 
     return ip_groups
 

@@ -66,8 +66,8 @@ def setup_interactive():
             raise ValueError("Invalid board revision")
 
         # 2. Generate Hardware Config
-        hardware_config = input("Enter the hardware config ('small', 'normal', 'big'): ")
-        if hardware_config not in ('small', 'normal', 'big'):
+        hardware_config = input("Enter the hardware config ('small', 'normal', 'big', 'hhi'): ")
+        if hardware_config not in ('small', 'normal', 'big', 'hhi'):
             raise ValueError("Invalid hardware config")
 
         # 3. Generate ID:

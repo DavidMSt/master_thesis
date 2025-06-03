@@ -1,3 +1,5 @@
+import random
+
 BLACK = (0, 0, 0)
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
@@ -43,3 +45,39 @@ MEDIUM_PURPLE = (147, 112, 219)
 MEDIUM_ORANGE = (255, 165, 0)
 MEDIUM_BROWN = (165, 42, 42)
 
+
+def rgb_to_hex(rgb):
+    """
+    Convert a list of RGB(A) values (0–1 floats) to a hex HTML color.
+    Examples:
+      rgb_to_hex([0.5, 0.2, 0.8])       -> "#8033cc"
+      rgb_to_hex([0.5, 0.2, 0.8, 0.3])  -> "#8033cc4d"
+    """
+
+    def clamp(x):
+        return max(0, min(x, 1))
+
+    if rgb is None:
+        return None
+
+    if len(rgb) == 3 or len(rgb) == 4:
+        # clamp & scale
+        comps = [int(clamp(c) * 255) for c in rgb]
+        # format RGB
+        hex_str = "#{:02x}{:02x}{:02x}".format(*comps[:3])
+        # if alpha present, append as two hex digits
+        if len(comps) == 4:
+            hex_str += "{:02x}".format(comps[3])
+        return hex_str
+
+    # fallback on bad input
+    return "#FFFFFF"
+
+
+def random_color(len=3):
+    if len == 3:
+        return [random.random(), random.random(), random.random()]
+    elif len == 4:
+        return [random.random(), random.random(), random.random(), random.random()]
+    else:
+        return None

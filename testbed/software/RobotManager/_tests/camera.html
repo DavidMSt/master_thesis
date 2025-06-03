@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Camera Test</title>
+  <style>
+    body { display: flex; flex-direction: column; align-items: center; font-family: sans-serif; padding: 2rem; }
+    video { border: 1px solid #ccc; border-radius: 4px; width: 640px; height: 480px; background: black; }
+    button { margin-top: 1rem; padding: 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>USB Camera Test</h1>
+  <video id="cam" autoplay playsinline muted></video>
+  <button id="startBtn">Start Camera</button>
+  <button id="stopBtn">Stop Camera</button>
+
+  <script>
+    const videoEl = document.getElementById('cam');
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn  = document.getElementById('stopBtn');
+    let stream = null;
+
+    startBtn.addEventListener('click', async () => {
+      if (stream) return;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        videoEl.srcObject = stream;
+      } catch (err) {
+        alert('Error accessing camera: ' + err.message);
+      }
+    });
+
+    stopBtn.addEventListener('click', () => {
+      if (!stream) return;
+      stream.getTracks().forEach(track => track.stop());
+      stream = null;
+      videoEl.srcObject = null;
+    });
+  </script>
+</body>
+</html>

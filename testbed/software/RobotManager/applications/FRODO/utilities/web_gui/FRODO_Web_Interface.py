@@ -130,6 +130,7 @@ class Circle(PlottableElement):
     diameter: float = 0.0
     fill: Optional[List[float]] = None
     linecolor: Optional[List[float]] = None
+    alpha: Optional[float] = 1
 
 
 # -----------------------------------------------------------------------------
@@ -169,7 +170,8 @@ class Group(PlottableElement):
                 return path
         return None
 
-    def get_element_by_id(self, path: str) -> Optional[Union["Group", Point, Agent, VisionAgent, Vector, CoordinateSystem, Line, Rectangle, Circle]]:
+    def get_element_by_id(self, path: str) -> Optional[
+        Union["Group", Point, Agent, VisionAgent, Vector, CoordinateSystem, Line, Rectangle, Circle]]:
         tokens = path.strip("/").split("/")
         if not tokens:
             return None
@@ -199,7 +201,8 @@ class Group(PlottableElement):
             return current_group.circles[last_token]
         return None
 
-    def remove_element_by_id(self, path: str) -> Optional[Union["Group", Point, Agent, VisionAgent, Vector, CoordinateSystem, Line, Rectangle, Circle]]:
+    def remove_element_by_id(self, path: str) -> Optional[
+        Union["Group", Point, Agent, VisionAgent, Vector, CoordinateSystem, Line, Rectangle, Circle]]:
         tokens = path.strip("/").split("/")
         if not tokens:
             return None
@@ -241,10 +244,20 @@ class Group(PlottableElement):
         self.agents[id] = agent
         return agent
 
-    def add_vision_agent(self, id: str, position: List[float], psi: float, vision_radius: float, vision_fov: float, **kwargs) -> VisionAgent:
-        vag = VisionAgent(id=id, position=position, psi=psi, vision_radius=vision_radius, vision_fov=vision_fov, **kwargs)
-        vag.parent = self
-        self.visionagents[id] = vag
+    def add_vision_agent(self, id: str | VisionAgent, position: List[float] = None, psi: float = 0, vision_radius: float = 0,
+                         vision_fov: float = 0, **kwargs) -> VisionAgent:
+        if isinstance(id, VisionAgent):
+            vag = id
+            vag.parent = self
+            self.visionagents[vag.id] = vag
+        else:
+            if position is None:
+                position = [0, 0]
+            vag = VisionAgent(id=id, position=position, psi=psi, vision_radius=vision_radius, vision_fov=vision_fov,
+                              **kwargs)
+            vag.parent = self
+            self.visionagents[id] = vag
+
         return vag
 
     def add_vector(self, id: str, origin: List[float], vec: List[float], **kwargs) -> Vector:
@@ -253,13 +266,15 @@ class Group(PlottableElement):
         self.vectors[id] = vector
         return vector
 
-    def add_coordinate_system(self, id: str, origin: List[float], ex: List[float], ey: List[float], **kwargs) -> CoordinateSystem:
+    def add_coordinate_system(self, id: str, origin: List[float], ex: List[float], ey: List[float],
+                              **kwargs) -> CoordinateSystem:
         cs = CoordinateSystem(id=id, origin=origin, ex=ex, ey=ey, **kwargs)
         cs.parent = self
         self.coordinate_systems[id] = cs
         return cs
 
-    def add_line(self, id: str, start: Union[str, List[float], object], end: Union[str, List[float], object], **kwargs) -> Line:
+    def add_line(self, id: str, start: Union[str, List[float], object], end: Union[str, List[float], object],
+                 **kwargs) -> Line:
         _start = start
         _end = end
         if not isinstance(start, (str, list)):
@@ -281,10 +296,17 @@ class Group(PlottableElement):
         self.rectangles[id] = rect
         return rect
 
-    def add_circle(self, id: str, mid: List[float], diameter: float, **kwargs) -> Circle:
-        circle = Circle(id=id, mid=mid, diameter=diameter, **kwargs)
-        circle.parent = self
-        self.circles[id] = circle
+    def add_circle(self, id: str | Circle, mid: List[float]=None, diameter: float=0, **kwargs) -> Circle:
+        if isinstance(id, Circle):
+            circle = id
+            circle.parent = self
+            self.circles[circle.id] = circle
+        else:
+            if mid is None:
+                mid = [0, 0]
+            circle = Circle(id=id, mid=mid, diameter=diameter, **kwargs)
+            circle.parent = self
+            self.circles[id] = circle
         return circle
 
     def add_group(self, id: Union["Group", str], **kwargs) -> "Group":
@@ -314,7 +336,8 @@ class Group(PlottableElement):
             "agents": {k: {**asdict_no_parent(v), "fullPath": v.fullPath} for k, v in self.agents.items()},
             "visionagents": {k: {**asdict_no_parent(v), "fullPath": v.fullPath} for k, v in self.visionagents.items()},
             "vectors": {k: {**asdict_no_parent(v), "fullPath": v.fullPath} for k, v in self.vectors.items()},
-            "coordinate_systems": {k: {**asdict_no_parent(v), "fullPath": v.fullPath} for k, v in self.coordinate_systems.items()},
+            "coordinate_systems": {k: {**asdict_no_parent(v), "fullPath": v.fullPath} for k, v in
+                                   self.coordinate_systems.items()},
             "lines": {k: {**asdict_no_parent(v),
                           "start": process_ref(v._start_element.fullPath if v._start_element is not None else v.start),
                           "end": process_ref(v._end_element.fullPath if v._end_element is not None else v.end),
@@ -325,6 +348,17 @@ class Group(PlottableElement):
             "groups": {k: v.to_dict() for k, v in self.groups.items()},
         }
         return group_dict
+
+    def clear(self):
+        self.points.clear()
+        self.agents.clear()
+        self.visionagents.clear()
+        self.vectors.clear()
+        self.coordinate_systems.clear()
+        self.lines.clear()
+        self.rectangles.clear()
+        self.circles.clear()
+        self.groups.clear()
 
 
 # -----------------------------------------------------------------------------
@@ -351,16 +385,19 @@ class FRODO_Web_Interface:
     def add_agent(self, id: str, position: List[float], psi: float, **kwargs) -> Agent:
         return self.default_group.add_agent(id, position, psi, **kwargs)
 
-    def add_vision_agent(self, id: str, position: List[float], psi: float, vision_radius: float, vision_fov: float, **kwargs) -> VisionAgent:
+    def add_vision_agent(self, id: str, position: List[float], psi: float, vision_radius: float, vision_fov: float,
+                         **kwargs) -> VisionAgent:
         return self.default_group.add_vision_agent(id, position, psi, vision_radius, vision_fov, **kwargs)
 
     def add_vector(self, id: str, origin: List[float], vec: List[float], **kwargs) -> Vector:
         return self.default_group.add_vector(id, origin, vec, **kwargs)
 
-    def add_coordinate_system(self, id: str, origin: List[float], ex: List[float], ey: List[float], **kwargs) -> CoordinateSystem:
+    def add_coordinate_system(self, id: str, origin: List[float], ex: List[float], ey: List[float],
+                              **kwargs) -> CoordinateSystem:
         return self.default_group.add_coordinate_system(id, origin, ex, ey, **kwargs)
 
-    def add_line(self, id: str, start: Union[str, List[float], object], end: Union[str, List[float], object], **kwargs) -> Line:
+    def add_line(self, id: str, start: Union[str, List[float], object], end: Union[str, List[float], object],
+                 **kwargs) -> Line:
         return self.default_group.add_line(id, start, end, **kwargs)
 
     def add_rectangle(self, id: str, mid: List[float], x: float, y: Optional[float] = None, **kwargs) -> Rectangle:

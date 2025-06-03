@@ -130,6 +130,8 @@ class JSPlot:
             'background_color': [1, 1, 1, 1],  # rgba
             'time_ticks_color': [0.5, 0.5, 0.5],  # rgba
             'time_display_format': 'HH:mm:ss',
+
+
         }
 
         self.logger = Logger(f"Plot {name}", 'DEBUG')

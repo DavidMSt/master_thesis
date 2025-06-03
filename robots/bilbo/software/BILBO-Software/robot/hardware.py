@@ -143,6 +143,41 @@ hardware_definition_normal_bilbo = {
     }
 }
 
+hardware_definition_hhi_twipr = {
+    'model': {
+        'type': 'hhi'
+    },
+    'settings': {
+        'theta_offset': math.radians(0),
+    },
+    'electronics': {
+        'board_revision': 'v4',
+        'shield': None,
+        'display': 'oled_bw_128x64',
+        'sound': {
+            'active': False,
+            'gain': 0.5,
+        },
+        'buttons': {
+            'primary': {
+                'exists': True,
+                'type': 'internal',
+                'pin': 5,
+                'led': {
+                    'exists': True,
+                    'type': 'internal',
+                    'pin': 4,
+                }
+            },
+            'secondary': {
+                'exists': False,
+            },
+        },
+        'leds': {},
+        'sensors': {},
+    }
+}
+
 def generate_hardware_definition(size:str):
     file = relativeToFullPath(f"{config_path}hardware.json")
     if fileExists(file):
@@ -154,6 +189,8 @@ def generate_hardware_definition(size:str):
         hardware_definition = hardware_definition_big_bilbo
     elif size == 'normal':
         hardware_definition = hardware_definition_normal_bilbo
+    elif size == 'hhi':
+        hardware_definition = hardware_definition_hhi_twipr
     else:
         raise ValueError("Size must be either 'small' or 'big'")
 

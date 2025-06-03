@@ -18,11 +18,6 @@ def main():
     streamer.start()
 
 
-    # frodo.control.setMode(FRODO_Control_Mode.EXTERNAL)
-    # frodo.control.setSpeed(0,1)
-    # time.sleep(1)
-    # print(frodo.getData())
-    # frodo.control.setSpeed(0, 0)
 
 
 

@@ -5160,7 +5160,7 @@
  
          }
  
-         const children = object.children;
+         const children = object.objects;
  
          for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -7468,7 +7468,7 @@
          this.type = 'Object3D';
  
          this.parent = null;
-         this.children = [];
+         this.objects = [];
  
          this.up = Object3D.DefaultUp.clone();
  
@@ -7756,7 +7756,7 @@
              }
  
              object.parent = this;
-             this.children.push( object );
+             this.objects.push( object );
  
              object.dispatchEvent( _addedEvent );
  
@@ -7784,12 +7784,12 @@
  
          }
  
-         const index = this.children.indexOf( object );
+         const index = this.objects.indexOf( object );
  
          if ( index !== - 1 ) {
  
              object.parent = null;
-             this.children.splice( index, 1 );
+             this.objects.splice( index, 1 );
  
              object.dispatchEvent( _removedEvent );
  
@@ -7815,9 +7815,9 @@
  
      clear() {
  
-         for ( let i = 0; i < this.children.length; i ++ ) {
+         for (let i = 0; i < this.objects.length; i ++ ) {
  
-             const object = this.children[ i ];
+             const object = this.objects[ i ];
  
              object.parent = null;
  
@@ -7825,7 +7825,7 @@
  
          }
  
-         this.children.length = 0;
+         this.objects.length = 0;
  
          return this;
  
@@ -7876,9 +7876,9 @@
  
          if ( this[ name ] === value ) return this;
  
-         for ( let i = 0, l = this.children.length; i < l; i ++ ) {
+         for (let i = 0, l = this.objects.length; i < l; i ++ ) {
  
-             const child = this.children[ i ];
+             const child = this.objects[ i ];
              const object = child.getObjectByProperty( name, value );
  
              if ( object !== undefined ) {
@@ -7937,7 +7937,7 @@
  
          callback( this );
  
-         const children = this.children;
+         const children = this.objects;
  
          for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -7953,7 +7953,7 @@
  
          callback( this );
  
-         const children = this.children;
+         const children = this.objects;
  
          for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -8009,7 +8009,7 @@
  
          // update children
  
-         const children = this.children;
+         const children = this.objects;
  
          for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -8051,7 +8051,7 @@
  
          if ( updateChildren === true ) {
  
-             const children = this.children;
+             const children = this.objects;
  
              for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -8237,13 +8237,13 @@
  
          //
  
-         if ( this.children.length > 0 ) {
+         if ( this.objects.length > 0 ) {
  
-             object.children = [];
+             object.objects = [];
  
-             for ( let i = 0; i < this.children.length; i ++ ) {
+             for (let i = 0; i < this.objects.length; i ++ ) {
  
-                 object.children.push( this.children[ i ].toJSON( meta ).object );
+                 object.objects.push( this.objects[ i ].toJSON( meta ).object );
  
              }
  
@@ -8349,9 +8349,9 @@
  
          if ( recursive === true ) {
  
-             for ( let i = 0; i < source.children.length; i ++ ) {
+             for (let i = 0; i < source.objects.length; i ++ ) {
  
-                 const child = source.children[ i ];
+                 const child = source.objects[ i ];
                  this.add( child.clone() );
  
              }
@@ -11937,7 +11937,7 @@
  
          const renderTarget = this.renderTarget;
  
-         const [ cameraPX, cameraNX, cameraPY, cameraNY, cameraPZ, cameraNZ ] = this.children;
+         const [ cameraPX, cameraNX, cameraPY, cameraNY, cameraPZ, cameraNZ ] = this.objects;
  
          const currentRenderTarget = renderer.getRenderTarget();
  
@@ -20980,7 +20980,7 @@
  
          }
  
-         const children = object.children;
+         const children = object.objects;
  
          for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -25330,7 +25330,7 @@
              camera.matrix.copy( cameraVR.matrix );
              camera.matrix.decompose( camera.position, camera.quaternion, camera.scale );
  
-             const children = camera.children;
+             const children = camera.objects;
  
              for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -27736,7 +27736,7 @@
  
          }
  
-         const children = object.children;
+         const children = object.objects;
  
          for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -42975,9 +42975,9 @@
          if ( data.userData !== undefined ) object.userData = data.userData;
          if ( data.layers !== undefined ) object.layers.mask = data.layers;
  
-         if ( data.children !== undefined ) {
+         if ( data.objects !== undefined ) {
  
-             const children = data.children;
+             const children = data.objects;
  
              for ( let i = 0; i < children.length; i ++ ) {
  
@@ -44682,7 +44682,7 @@
          }
  
          // search into node subtree.
-         if ( root.children ) {
+         if ( root.objects ) {
  
              const searchNodeSubtree = function ( children ) {
  
@@ -44696,7 +44696,7 @@
  
                      }
  
-                     const result = searchNodeSubtree( childNode.children );
+                     const result = searchNodeSubtree( childNode.objects );
  
                      if ( result ) return result;
  
@@ -44706,7 +44706,7 @@
  
              };
  
-             const subTreeNode = searchNodeSubtree( root.children );
+             const subTreeNode = searchNodeSubtree( root.objects );
  
              if ( subTreeNode ) {
  
@@ -47320,7 +47320,7 @@
  
      if ( recursive === true ) {
  
-         const children = object.children;
+         const children = object.objects;
  
          for ( let i = 0, l = children.length; i < l; i ++ ) {
  
@@ -47977,9 +47977,9 @@
  
      }
  
-     for ( let i = 0; i < object.children.length; i ++ ) {
+     for (let i = 0; i < object.objects.length; i ++ ) {
  
-         boneList.push.apply( boneList, getBoneList( object.children[ i ] ) );
+         boneList.push.apply( boneList, getBoneList( object.objects[ i ] ) );
  
      }
  
@@ -48109,14 +48109,14 @@
  
      dispose() {
  
-         this.children[ 0 ].geometry.dispose();
-         this.children[ 0 ].material.dispose();
+         this.objects[ 0 ].geometry.dispose();
+         this.objects[ 0 ].material.dispose();
  
      }
  
      update() {
  
-         const mesh = this.children[ 0 ];
+         const mesh = this.objects[ 0 ];
  
          if ( this.color !== undefined ) {
  
@@ -48825,8 +48825,8 @@
  
          this.geometry.dispose();
          this.material.dispose();
-         this.children[ 0 ].geometry.dispose();
-         this.children[ 0 ].material.dispose();
+         this.objects[ 0 ].geometry.dispose();
+         this.objects[ 0 ].material.dispose();
  
      }
  

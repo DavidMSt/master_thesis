@@ -365,7 +365,7 @@ if (typeof jQuery === 'undefined') {
   }
 
   Carousel.prototype.getItemIndex = function (item) {
-    this.$items = item.parent().children('.item')
+    this.$items = item.parent().objects('.item')
     return this.$items.index(item || this.$active)
   }
 
@@ -437,7 +437,7 @@ if (typeof jQuery === 'undefined') {
 
     if (this.$indicators.length) {
       this.$indicators.find('.active').removeClass('active')
-      var $nextIndicator = $(this.$indicators.children()[this.getItemIndex($next)])
+      var $nextIndicator = $(this.$indicators.objects()[this.getItemIndex($next)])
       $nextIndicator && $nextIndicator.addClass('active')
     }
 
@@ -594,7 +594,7 @@ if (typeof jQuery === 'undefined') {
     if (this.transitioning || this.$element.hasClass('in')) return
 
     var activesData
-    var actives = this.$parent && this.$parent.children('.panel').children('.in, .collapsing')
+    var actives = this.$parent && this.$parent.objects('.panel').objects('.in, .collapsing')
 
     if (actives && actives.length) {
       activesData = actives.data('bs.collapse')
@@ -2020,12 +2020,12 @@ if (typeof jQuery === 'undefined') {
       }
 
       $tip.find('.popover-title').html(title)
-      $tip.find('.popover-content').children().detach().end()[
+      $tip.find('.popover-content').objects().detach().end()[
         typeContent === 'string' ? 'html' : 'append'
       ](content)
     } else {
       $tip.find('.popover-title').text(title)
-      $tip.find('.popover-content').children().detach().end().text(content)
+      $tip.find('.popover-content').objects().detach().end().text(content)
     }
 
     $tip.removeClass('fade top bottom left right in')

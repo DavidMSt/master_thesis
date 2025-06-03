@@ -3,22 +3,25 @@
     /* Layout variables */
     --headbar-height: 6vh;
     --robot-status-bar-height: 5vh;
-    --nav-height: 3.5vh;
+    --page-height: 4.5vh;
     --bottom-height: 23vh; /* height of the new bottom bar */
-    --app-bar-width: 10%;
+    --category-bar-width: 10%;
     --grid-gap: 2px;
 
-    --grid-rows: 16;
+    --grid-rows: 18;
     --grid-cols: 50;
 
     --headbar-rows: 2;
     --headbar-cols: 25;
-    --navigation_bar-rows: 1;
-    --navigation_bar-cols: 10;
+
+    --page_bar-rows: 1;
+    --page_bar-cols: 10;
+
     --robot_status_bar-rows: 2;
     --robot_status_bar-cols: 20;
-    --application_bar-rows: 10;
-    --application_bar-cols: 1;
+
+    --category_bar-rows: 10;
+    --category_bar-cols: 1;
 }
 
 /* Reset and box-sizing */
@@ -35,30 +38,66 @@ html, body {
     margin: 0;
 }
 
+/*body {*/
+/*    display: grid;*/
+/*    grid-template-columns: var(--category-bar-width) auto;*/
+/*    grid-template-rows:*/
+/*    var(--headbar-height)*/
+/*    var(--robot-status-bar-height)*/
+/*    var(--page-height)*/
+/*    1fr*/
+/*    var(--bottom-height);*/
+/*    grid-template-areas:*/
+/*    "headbar headbar"*/
+/*    "app     robot_status_bar"*/
+/*    "app     pages"*/
+/*    "app     content"*/
+/*    "app     bottombar";*/
+/*    font-family: Arial, sans-serif;*/
+/*    height: 100vh;*/
+/*    gap: 2px;*/
+/*    !*background-color: rgb(31, 32, 35);*!*/
+/*    background-color: rgb(31, 32, 35);*/
+/*}*/
+
 body {
     display: grid;
-    grid-template-columns: var(--app-bar-width) auto;
+    grid-template-columns: var(--category-bar-width) auto;
     grid-template-rows:
-    var(--headbar-height)
-    var(--robot-status-bar-height)
-    var(--nav-height)
-    1fr
-    var(--bottom-height);
+    var(--headbar-height)            /* row 1: headbar */
+    var(--robot-status-bar-height)   /* row 2: robot_status_bar */
+    var(--page-height)               /* row 3: page_bar */
+    1fr                              /* row 4: content */
+    var(--bottom-height); /* row 5: bottombar */
+
+    /* Shift "app" down to row 3 (so that row 2 only has robot_status_bar in column 2) */
     grid-template-areas:
-    "headbar headbar"
-    "app     robot_status_bar"
-    "app     nav"
-    "app     content"
-    "app     bottombar";
+    "headbar            headbar"
+    "ph                  robot_status_bar"
+    "app                pages"
+    "app                content"
+    "app                bottombar";
     font-family: Arial, sans-serif;
     height: 100vh;
     gap: 2px;
+    /*background-color: rgb(31, 32, 35);*/
+    background-color: rgb(31, 32, 35);
+}
+
+#side_placeholder {
+    /*grid-row: 2 / 3;     !* start at row 2, end at row 3 *!*/
+    /*grid-column: 1 / 2;  !* start at column 1, end at column 2 *!*/
+    grid-area: ph;
+    /* For  example, give it a border so you can see where it lives: */
+    border: 1px solid #333;
+    border-radius: 5px;
+    background-color: transparent /* (optional) light shading */
 }
 
 /* Headbar */
 #headbar {
     grid-area: headbar;
-    background-color: #ff9999;
+    background-color: rgba(142, 142, 142, 0);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -72,53 +111,55 @@ body {
     gap: 1px;
     height: 100%;
     width: 100%;
-    outline: 1px solid rgba(255, 255, 255, 0.1);
+    /*outline: 1px solid rgba(255, 255, 255, 0.1);*/
 }
 
 .headbar_cell {
-    border: 1px dashed #333;
+    border: 0.5px dashed rgba(230, 230, 230, 0.1);
     display: flex;
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.4);
+    /*background: rgba(255, 255, 255, 0);*/
     align-items: center;
     justify-content: center;
     border-radius: 1px;
+    color: rgba(230, 230, 230, 0.34);
 }
 
 /* Navigation bar */
-#navigation_bar {
-    grid-area: nav;
-    background-color: #99ccff;
+#page_bar {
+    grid-area: pages;
+    background: rgba(255, 255, 255, 0);
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 1px solid #333;
+    /*border: 1px solid #333;*/
 }
 
-#navigation_bar_grid {
+.page_bar_grid {
     display: grid;
-    grid-template-rows: repeat(var(--navigation_bar-rows), 1fr);
-    grid-template-columns: repeat(var(--navigation_bar-cols), 1fr);
+    grid-template-rows: repeat(var(--page_bar-rows), 1fr);
+    grid-template-columns: repeat(var(--page_bar-cols), 1fr);
     gap: 2px;
     height: 100%;
     width: 100%;
-    outline: 1px solid rgba(255, 255, 255, 0.1);
+    /*outline: 1px solid rgba(255, 255, 255, 0.1);*/
 }
 
-.navigation_bar_cell {
-    border: 1px dashed #333;
+.page_bar_grid_cell {
+    border: 0px dashed rgba(230, 230, 230, 0.34);
     display: flex;
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0);
     align-items: center;
     justify-content: center;
     border-radius: 1px;
+    color: rgba(230, 230, 230, 0.34);
 }
 
 /* Navigation bar */
 #robot_status_bar {
     grid-area: robot_status_bar;
-    background-color: rgba(204, 0, 133, 0.15);
+    background: rgba(255, 255, 255, 0);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -132,48 +173,50 @@ body {
     gap: 2px;
     height: 100%;
     width: 100%;
-    outline: 1px solid rgba(255, 255, 255, 0.1);
+    /*outline: 1px solid rgba(255, 255, 255, 0.1);*/
 }
 
 .robot_status_bar_cell {
-    border: 1px dashed #333;
+    border: 0.5px dashed rgba(230, 230, 230, 0.1);
     display: flex;
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0);
     align-items: center;
     justify-content: center;
     border-radius: 1px;
+    color: rgba(230, 230, 230, 0.34);
 }
 
 /* Application bar */
-#application_bar {
+#category_bar {
     grid-area: app;
-    background-color: #99ff99;
+    background: rgba(255, 255, 255, 0);
     display: flex;
     align-items: center;
     justify-content: center;
     border: 1px solid #333;
 }
 
-#application_bar_grid {
+#category_bar_grid {
     display: grid;
-    grid-template-rows: repeat(var(--application_bar-rows), 1fr);
-    grid-template-columns: repeat(var(--application_bar-cols), 1fr);
+    grid-template-rows: repeat(var(--category_bar-rows), 1fr);
+    grid-template-columns: repeat(var(--category_bar-cols), 1fr);
     gap: 2px;
     height: 100%;
     width: 100%;
-    outline: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-.application_bar_cell {
-    border: 1px dashed #333;
+.category_bar_cell {
+    border: 0px dashed rgba(230, 230, 230, 0.34);
     display: flex;
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0);
     align-items: center;
     justify-content: center;
     border-radius: 1px;
+    color: rgba(230, 230, 230, 0.34);
 }
+
 
 #bottombar {
     grid-area: bottombar;
@@ -187,7 +230,7 @@ body {
 
 /* if you want visual separation, optional: */
 .bottombar__left {
-    border: 1px solid rgba(0, 0, 0, 1);
+    border: 0px solid rgba(255, 255, 255, 0.5);
     width: 100%;
     height: 100%;
     display: flex;
@@ -198,7 +241,7 @@ body {
 }
 
 .bottombar__right {
-    border: 1px solid rgba(0, 0, 0, 1);
+    border: 1px solid #333;
     width: 100%;
     height: 100%;
     display: flex;
@@ -210,7 +253,7 @@ body {
 /* Content area */
 #content {
     grid-area: content;
-    background-color: #ffff99;
+    background-color: rgba(255, 255, 255, 0);
     /*background-color: #1f2023;*/
     padding: 5px;
     /*overflow: hidden;*/
@@ -230,71 +273,215 @@ body {
 }
 
 /* Grid items for testing layout */
-.grid-item {
+.placeholder {
     border: 1px dashed #333;
+    /*border: none;*/
     display: flex;
     font-size: 12px;
-    background: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0);
     align-items: center;
     justify-content: center;
     border-radius: 5px;
 }
 
-
-#terminal-path,
-#terminal-suggestions {
-    background-color: #222;
-    color: #fff;
-    padding: 5px;
-    font-family: monospace;
-    font-size: 13px;
-}
-
-.map-wrapper {
-    grid-column: 1 / 8;
-    grid-row: 1 / 8;
-    position: relative;
-    overflow: hidden;
-    border-radius: 10px;
-    border: 1px solid #ccc;
-}
-
-/* ensure the canvas fills its parent */
-.map-wrapper canvas {
+.content_placeholder {
+    font-size: 60px;
     width: 100%;
     height: 100%;
-    display: block;
-    background-color: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center; /* vertical centering */
+    justify-content: center; /* horizontal centering of the block */
+    text-align: center; /* <-- centers each line of text */
+    flex-direction: column; /* makes multi-line behave line-by-line */
+    color: rgba(255, 255, 255, 0.34);
+    font-family: "Roboto", sans-serif;
+}
+
+.content_placeholder .placeholder_title {
+    font-weight: bold;
+    color: #753c3c;
+}
+
+.content_placeholder .placeholder_title:hover {
+    filter: brightness(1.4);
+}
+
+.content_placeholder .placeholder_info {
+    color: #8a8a8a;
+}
+
+.content_placeholder .placeholder_info:hover {
+    filter: brightness(1.4);
+}
+
+/* ================================================================================================================== */
+.category_button {
+    border: 1px solid #606060;
+    border-radius: 4px;
+    font-size: 14pt;
+    cursor: pointer;
+    user-select: none;
+    font-family: "Roboto Light", sans-serif;
+    background: rgba(45, 45, 50, 1);
+}
+
+.category_button {
+    transition: background 0.1s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    filter 0.2s ease;
+}
+
+.category_button:hover {
+    filter: brightness(1.4);
+}
+
+.category_button.accepted {
+    animation: blink 0.3s ease;
+}
+
+.category_button:active {
+    /* move it down slightly */
+    transform: translateY(1px);
+    /* give it an inset shadow / darker look */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* (optional) darken the background a bit */
+    filter: brightness(0.9);
+}
+
+.category_button.not-selected {
+    opacity: 0.5;
+    border: 1px solid rgb(73, 73, 73);
+}
+
+.category_button.selected {
+    opacity: 1;
+    filter: brightness(1.2);
+    border: 2px solid rgb(100, 100, 100);
+    background: rgb(59, 59, 66);
+}
+
+/* ================================================================================================================== */
+.page_button {
+    border: 0.5px solid #606060;
+    border-radius: 4px;
+    font-size: 11pt;
+    cursor: pointer;
+    user-select: none;
+    font-family: "Roboto Light", sans-serif;
+    background: rgba(45, 45, 50, 1);
 }
 
 
-/*.gridItem {*/
-/*    position: relative;*/
-/*    outline: 1px solid rgba(255, 255, 255, 0.5);*/
-/*    border-radius: 4px;*/
-/*    -webkit-user-select: none;*/
-/*    -moz-user-select: none;*/
-/*    -ms-user-select: none;*/
-/*    user-select: none;*/
-/*}*/
+.page_button {
+    transition: background 0.1s ease,
+    transform 0.1s ease,
+    box-shadow 0.1s ease,
+    filter 0.2s ease;
+}
+
+.page_button:hover {
+    filter: brightness(1.4);
+}
+
+.page_button.accepted {
+    animation: blink 0.3s ease;
+}
+
+.page_button:active {
+    /* move it down slightly */
+    transform: translateY(1px);
+    /* give it an inset shadow / darker look */
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    /* (optional) darken the background a bit */
+    filter: brightness(0.9);
+}
+
+.page_button.not-selected {
+    opacity: 0.65;
+    border: 1px solid rgb(73, 73, 73);
+}
+
+.page_button.selected {
+    opacity: 1;
+    filter: brightness(1.2);
+    /*border: 2px solid rgb(73, 73, 73);*/
+    border: 2px solid rgb(100, 100, 100);
+    background: rgb(59, 59, 66);
+}
+
+/* ================================================================================================================== */
+
+/* connection indicator circle */
+.status-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(173, 1, 1, 0.8); /* default: disconnected */
+    transition: background-color 0.1s ease;
+}
+
+/* connected state */
+.status-indicator.connected {
+    background-color: rgba(2, 119, 2, 0.89);
+}
+
+/* subtle “blink” animation */
+@keyframes blink {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.7;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+.status-indicator.blink {
+    animation: blink 0.25s ease;
+}
+
+/* message-rate text */
+.msg-rate {
+    font-size: 0.85em;
+    color: rgba(255, 255, 255, 0.6);
+    font-family: sans-serif;
+    min-width: 3em;
+    text-align: right;
+    white-space: nowrap;
+
+    /* pick however many “characters” you need wide—e.g. up to 3 digits + “.0” = 5ch */
+    width: 5ch;
+    /*padding-right: 10px;*/
+    flex: 0 0 5ch; /* when inside a flex container */
+    font-variant-numeric: tabular-nums; /* forces digits to be monospaced */
+}
 
 
-/*!*!* Real button styling *!*/
-/*button.buttonItem {*/
-/*    !*border: none;*!*/
-/*    !*background: #2b542c;*!*/
-/*    !*color: #fff;*!*/
-/*    !*font-size: 12px;*!*/
-/*    !*cursor: pointer;*!*/
-/*    !*width: 100%;*!*/
-/*    !*height: 100%;*!*/
-/*    !*text-align: center;*!*/
-/*    !*white-space: normal;*!*/
-/*    !*word-break: break-word;*!*/
-/*    !*-webkit-text-size-adjust: none;*!*/
-/*    font-size: 12px;*/
-/*    display: flex;*/
-/*    flex-direction: column;*/
-/*    align-items: center;*/
-/*    justify-content: center;*/
-/*}*/
+.logo_link {
+    grid-row: 1 / span 2;
+    grid-column: 1 / span 3;
+    justify-self: center;
+    align-self: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bilbolab_logo {
+    grid-row: 1 / span 2;
+    grid-column: 1 / span 3;
+    justify-self: center;
+    align-self: center;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    background-color: transparent;
+}
+
+.bilbolab_logo:hover {
+    filter: brightness(1.2);
+    cursor: pointer;
+}

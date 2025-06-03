@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Camera Feed</title>
+  <style>
+    /* make video fill the viewport */
+    html, body {
+      margin: 0; padding: 0;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: black;
+    }
+    video {
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+<body>
+  <video id="cam" autoplay playsinline muted></video>
+
+  <script>
+    async function startCam() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: false
+        });
+        document.getElementById('cam').srcObject = stream;
+      } catch (err) {
+        console.error('Unable to access camera:', err);
+        document.body.innerHTML =
+          '<p style="color:white; text-align:center; margin-top:2rem;">Error: ' +
+          err.message + '</p>';
+      }
+    }
+    startCam();
+  </script>
+</body>
+</html>

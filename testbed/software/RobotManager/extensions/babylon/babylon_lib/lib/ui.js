@@ -101,16 +101,16 @@ class Box extends Container {
         }
 
         this.alignment(options.alignment);
-        this.children = [];
+        this.objects = [];
 
         insertDOM(container, this.content);
     }
 
     insertChild(child) {
-        this.children.push(child);
+        this.objects.push(child);
         this.content.append(child);
 
-        if (this.children.length === 1)
+        if (this.objects.length === 1)
             return;
 
         if (this.options.direction === 'row') {
@@ -123,7 +123,7 @@ class Box extends Container {
     set spacing(spacing) {
         this.options.spacing = spacing;
 
-        for (let child in this.children.slice(1)) {
+        for (let child in this.objects.slice(1)) {
             if (this.options.direction === 'row') {
                 child.css('margin-left', this.spacing);
             } else {
@@ -718,13 +718,13 @@ class Panel extends Container {
         }
 
         this.spacing  = options.spacing;
-        this.children = [];
+        this.objects = [];
 
         insertDOM(container, this.panel);
     }
 
     insertChild(child) {
-        this.children.push(child);
+        this.objects.push(child);
         this.content.append(child);
 
         if (child.css != null)
@@ -744,7 +744,7 @@ class Panel extends Container {
     set spacing(spacing) {
         this._spacing = spacing;
 
-        for (let i in this.children) {
+        for (let i in this.objects) {
             i.css('margin-top', spacing);
         }
     }

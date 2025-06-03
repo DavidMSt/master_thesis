@@ -7,7 +7,7 @@ from core.device import Device
 from core.utils.callbacks import callback_definition, CallbackContainer
 from core.utils.events import event_definition, ConditionEvent
 from core.utils.logging_utils import Logger
-from core.utils.network.network import getValidHostIP
+from core.utils.network.network import getHostIP
 
 # === GLOBAL VARIABLES =================================================================================================
 logger = Logger('DEVICES')
@@ -45,7 +45,8 @@ class DeviceManager:
         self.callbacks = DeviceManagerCallbacks()
         self.events = DeviceManagerEvents()
 
-        address = getValidHostIP()
+        address = getHostIP()
+
         if address is None:
             logger.info("No valid IP available")
             exit()

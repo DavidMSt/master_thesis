@@ -1842,7 +1842,7 @@ export function createGridMap(mapContainer, canvas, options) {
                 || gridMap._getFlattenedGroupObjects().find(o => o.id === id);
             if (!obj) return;
 
-            Array.from(tr.children).forEach(td => {
+            Array.from(tr.objects).forEach(td => {
                 const prop = td.dataset.prop;
                 switch (prop) {
                     case 'x':

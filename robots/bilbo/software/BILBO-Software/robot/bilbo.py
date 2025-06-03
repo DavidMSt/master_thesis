@@ -27,6 +27,7 @@ from core.utils.revisions import get_versions, is_ll_version_compatible
 import robot.lowlevel.stm32_addresses as stm32_addresses
 from core.utils.exit import register_exit_callback
 
+
 # === GLOBAL VARIABLES =================================================================================================
 
 setLoggerLevel('wifi', 'ERROR')
@@ -137,7 +138,7 @@ class BILBO:
         self.events = BILBO_Events()
         self.callbacks = BILBO_Callbacks()
         self._eventListener = EventListener(event=self.communication.events.rx_stm32_sample, callback=self.update)
-        register_exit_callback(self._shutdown, priority=-1)
+        register_exit_callback(self._shutdown, priority=0)
         register_exit_callback(self._shutdownInit, priority=2)
 
 
@@ -244,9 +245,10 @@ class BILBO:
         )
 
     def _shutdownInit(self):
+        self.logger.important(f"Shutdown {self.id}")
+        self.control.setMode(BILBO_Control_Mode.OFF)
         self._eventListener.stop()
         self.utilities.playTone('warning')
-        self.control.setMode(BILBO_Control_Mode.OFF)
         self.board.setRGBLEDExtern([2, 2, 2])
 
     # ------------------------------------------------------------------------------------------------------------------

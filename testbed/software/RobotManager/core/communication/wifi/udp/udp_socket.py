@@ -40,6 +40,7 @@ class UDP_Socket:
             raise Exception('No Local IP address')
 
         self.port = port
+        # self.port = 37022
 
         if config is None:
             config = {}
@@ -58,7 +59,7 @@ class UDP_Socket:
         self._socket.settimeout(0)
 
         # set ip and port
-        self._socket.bind((str(self.address), self.port))  # FOR WINDOWS
+        self._socket.bind((str(self.address), self.port))
         # self._socket.bind(("", self.port))  # FOR RASPBERRY PI
         self._thread = threading.Thread(target=self._thread_fun)
         self._exit = False
@@ -83,8 +84,8 @@ class UDP_Socket:
 
         try:
             self._socket.sendto(data, (address, self.port))
-        except OSError:
-            logger.error("Cannot send data to UDP socket")
+        except OSError as e:
+            logger.error(f"Cannot send data to UDP socket: {e}")
 
     # ------------------------------------------------------------------------------------------------------------------
     def close(self):

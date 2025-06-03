@@ -1,5 +1,6 @@
 import abc
 import dataclasses
+import math
 from abc import ABC
 
 import numpy as np
@@ -92,6 +93,7 @@ class TrackedOrigin(TrackedAsset):
     position: np.ndarray
     x_axis: np.ndarray
     y_axis: np.ndarray
+    psi: float
 
     def __init__(self, name, definition: TrackedOrigin_Definition):
         self.name = name
@@ -100,6 +102,7 @@ class TrackedOrigin(TrackedAsset):
         self.position = np.zeros(2)
         self.x_axis = np.zeros(2)
         self.y_axis = np.zeros(2)
+        self.psi = 0
 
     def update(self, data: RigidBodySample):
         # Check if tracking is valid
@@ -110,24 +113,27 @@ class TrackedOrigin(TrackedAsset):
             self.y_axis = np.zeros(2)
             return
 
-        self.position = data.markers[self.definition.origin]
-        self.x_axis = data.markers[self.definition.x_axis_end] - self.position
-        y_axis_raw = data.markers[self.definition.y_axis_end] - self.position
+        self.position = np.asarray(data.markers[self.definition.origin][0:2])
+        self.x_axis =  np.asarray(data.markers[self.definition.x_axis_end][0:2]) - self.position
+        y_axis_raw =  np.asarray(data.markers[self.definition.y_axis_end][0:2]) - self.position
+
+        # Normalize the axes to 1
+        self.x_axis = self.x_axis / np.linalg.norm(self.x_axis)
+        y_axis_raw = y_axis_raw / np.linalg.norm(y_axis_raw)
 
         _, y_axis = fix_coordinate_axes(self.x_axis, y_axis_raw, 'x')
-        self.y_axis = y_axis
+        self.y_axis = y_axis / np.linalg.norm(y_axis)
 
+        self.psi = calculate_rotation_angle(vector=self.x_axis)
         self.tracking_valid = True
-
-        pass
 
 
 # ======================================================================================================================
 vision_robot_application_assets = {
     'frodo1': TrackedVisionRobot('frodo1', TrackedVisionRobot_Definition(points=[1, 2, 3, 4, 5],
-                                                                         point_y_axis_start=1,
-                                                                         point_y_axis_end=4,
-                                                                         point_x_axis_project=3)),
+                                                                         point_y_axis_start=5,
+                                                                         point_y_axis_end=3,
+                                                                         point_x_axis_project=2)),
     'frodo2': TrackedVisionRobot('frodo2', TrackedVisionRobot_Definition(points=[1, 2, 3, 4, 5],
                                                                          point_y_axis_start=1,
                                                                          point_y_axis_end=2,
@@ -137,7 +143,12 @@ vision_robot_application_assets = {
                                                                          point_y_axis_end=2,
                                                                          point_x_axis_project=5)),
     'static1': TrackedOrigin('static1', TrackedOrigin_Definition(points=[1, 2, 3, 4, 5],
-                                                                 origin=5,
-                                                                 x_axis_end=4,
-                                                                 y_axis_end=3))
+                                                                 origin=3,
+                                                                 x_axis_end=1,
+                                                                 y_axis_end=4)),
+
+    'static2': TrackedOrigin('static2', TrackedOrigin_Definition(points=[1, 2, 3, 4, 5],
+                                                                 origin=1,
+                                                                 x_axis_end=5,
+                                                                 y_axis_end=4))
 }

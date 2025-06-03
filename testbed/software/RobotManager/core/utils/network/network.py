@@ -69,46 +69,77 @@ def getInterfaceIP(interface_name):
     return None
 
 
-def getLocalAndUsbIPs():
+import socket
+
+
+def getAllPrivateIPs():
     """
-    Retrieves all local IPs starting with '192.' and USB IPs starting with '169.'.
-    :return: A dictionary with two keys: 'local_ips' and 'usb_ips',
+    Retrieves private IP addresses grouped by common subnet origins:
+    - '192.*' (Local Wi-Fi/LAN),
+    - '169.*' (USB or self-assigned),
+    - '172.*' (Often WSL or Docker),
+    - '10.*' (Common in enterprise/virtual setups).
+
+    :return: A dictionary with keys: 'local_ips', 'usb_ips', 'wsl_ips', 'enterprise_ips',
              each containing a list of corresponding IP addresses.
     """
-    local_ips = []
-    usb_ips = []
+    ip_groups = {
+        "local_ips": [],
+        "usb_ips": [],
+        "wsl_ips": [],
+        "enterprise_ips": []
+    }
     try:
         hostname = socket.gethostname()
-        # Only append '.local' if there's no dot in the hostname (i.e., no domain suffix)
         if '.' not in hostname:
             hostname = f"{hostname}.local"
 
         ip_addresses = socket.gethostbyname_ex(hostname)[2]
-        local_ips = [ip for ip in ip_addresses if ip.startswith("192.")]
-        usb_ips = [ip for ip in ip_addresses if ip.startswith("169.")]
+
+        for ip in ip_addresses:
+            if ip.startswith("192."):
+                ip_groups["local_ips"].append(ip)
+            elif ip.startswith("169."):
+                ip_groups["usb_ips"].append(ip)
+            elif ip.startswith("172."):
+                ip_groups["wsl_ips"].append(ip)
+            elif ip.startswith("10."):
+                ip_groups["enterprise_ips"].append(ip)
     except Exception as e:
         print(f"Error retrieving IPs: {e}")
-        return {"local_ips": [], "usb_ips": []}
+        return ip_groups  # Still return structure, just empty
 
-    return {"local_ips": local_ips, "usb_ips": usb_ips}
+    return ip_groups
 
 
 def chooseIpInteractive(ip_data):
     """
-    Prompts the user to choose an IP from the provided list of IPs.
+    Prompts the user to choose an IP from the provided categorized IP dictionary.
 
-    :param ip_data: A dictionary containing 'local_ips' and 'usb_ips'.
-    :return: The chosen IP address as a string.
+    :param ip_data: A dictionary containing keys like 'local_ips', 'usb_ips',
+                    'wsl_ips', and 'enterprise_ips', each mapping to a list of IPs.
+    :return: The chosen IP address as a string, or None if none available.
     """
-    all_ips = ip_data.get("local_ips", []) + ip_data.get("usb_ips", [])
+
+    categories = ["local_ips", "usb_ips", "wsl_ips", "enterprise_ips"]
+    all_ips = []
+    ip_labels = []
+
+    # Flatten and label all IPs
+    for category in categories:
+        ips = ip_data.get(category, [])
+        for ip in ips:
+            label = category.replace("_ips", "").upper()  # e.g., LOCAL, USB
+            all_ips.append(ip)
+            ip_labels.append(label)
 
     if not all_ips:
         logger.info("No IP addresses found.")
         return None
 
     print("Available IPs:")
-    for idx, ip in enumerate(all_ips, 1):
-        print(f"{idx}: {ip}")
+    for idx, (ip, label) in enumerate(zip(all_ips, ip_labels), 1):
+        print(f"{idx}: {ip} ({label})")
 
     while True:
         try:
@@ -121,18 +152,27 @@ def chooseIpInteractive(ip_data):
             print("Invalid input. Please enter a number.")
 
 
-def getValidHostIP():
-    ip_data = getLocalAndUsbIPs()
-    all_ips = ip_data.get("local_ips", []) + ip_data.get("usb_ips", [])
-    if all_ips is None:
-        return None
-    if len(all_ips) == 0:
+def getHostIP():
+    """
+    Retrieves a valid host IP address by using getAllPrivateIPs().
+    If multiple IPs are available, prompts user to choose interactively.
+
+    :return: A single selected IP address, or None if none are found.
+    """
+    ip_data = getAllPrivateIPs()
+    all_ips = (
+            ip_data.get("local_ips", []) +
+            ip_data.get("usb_ips", []) +
+            ip_data.get("wsl_ips", []) +
+            ip_data.get("enterprise_ips", [])
+    )
+
+    if not all_ips:
         return None
     if len(all_ips) == 1:
         return all_ips[0]
 
-    # If there are more than one: choose
-    logger.info("More than one possible IP Address")
+    logger.info("Multiple IP addresses found. Prompting for selection...")
     time.sleep(0.2)
     chosen_ip = chooseIpInteractive(ip_data)
     return chosen_ip

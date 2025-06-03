@@ -35,6 +35,7 @@ class Tracker:
     Main Tracker class responsible for handling assets tracking using OptiTrack.
     """
     assets: dict[str, TrackedAsset]  # Dictionary of tracked assets
+    tracked_assets: dict[str, TrackedAsset]
     optitrack: OptiTrack  # OptiTrack instance for motion tracking
 
     callbacks: Tracker_Callbacks  # Callback handler
@@ -49,10 +50,12 @@ class Tracker:
         self.assets = assets
         self.optitrack = OptiTrack(server_address="192.168.8.248")  # Initialize OptiTrack with server address
 
-        # Set up event listener for new samples
-        # self.event_listener_sample = EventListener(self.optitrack.events.sample,
-        #                                            callback=self._optitrack_new_sample_callback)
+        self.optitrack.logger.switchLoggingLevel('INFO','DEBUG')
+        self.optitrack.logger.setLevel('DEBUG')
 
+        self.tracked_assets = {}
+
+        # Set up an event listener for new samples
         self.optitrack.events.sample.on(self._optitrack_new_sample_callback, input_resource=True)
 
         # Register callback for description reception
@@ -80,6 +83,8 @@ class Tracker:
             return False
 
         logger.info("Starting Tracker")
+
+        return True
         # self.event_listener_sample.start()  # Start the event listener for new samples
         # self._thread.start()  # Uncomment if background thread processing is needed
 
@@ -89,18 +94,17 @@ class Tracker:
         Callback function triggered when a new sample is received from OptiTrack.
         :param sample: Dictionary containing rigid body samples.
         """
-        for name, asset in self.assets.items():
-
+        for name, asset in self.tracked_assets.items():
             # Ensure asset data exists in the sample
             if name not in sample:
-                logger.error(f"Asset {name} not found in sample")
+                logger.error(f"Tracked asset {name} not found in sample")
                 continue
 
             asset_data = sample[name]  # Retrieve asset data
             asset.update(asset_data)  # Update asset state
 
-        self.callbacks.new_sample.call(self.assets)  # Trigger callback
-        self.events.new_sample.set(self.assets)  # Set event
+        self.callbacks.new_sample.call(self.tracked_assets)  # Trigger callback
+        self.events.new_sample.set(self.tracked_assets)  # Set event
 
     # ------------------------------------------------------------------------------------------------------------------
     def _optitrack_description_callback(self, rigid_bodies):
@@ -113,14 +117,18 @@ class Tracker:
         # Check if all assets are currently tracked
         for name, asset in self.assets.items():
             if name not in rigid_bodies:
-                logger.error(f"Asset {name} not available in OptiTrack data")
+                logger.debug(f"Asset {name} not available in OptiTrack data")
                 all_assets_tracked = False
+            else:
+                self.tracked_assets[name] = asset  # Update tracked assets dictionary
 
         if all_assets_tracked:
             logger.info("All assets tracked")
 
-        self.callbacks.description_received.call(self.assets)  # Trigger callback
-        self.events.description_received.set(self.assets)  # Set event
+        logger.info(f"Tracked assets: {list(self.tracked_assets.keys())}")
+
+        self.callbacks.description_received.call(self.tracked_assets)  # Trigger callback
+        self.events.description_received.set(self.tracked_assets)  # Set event
 
 
 # =====================================================================================================================

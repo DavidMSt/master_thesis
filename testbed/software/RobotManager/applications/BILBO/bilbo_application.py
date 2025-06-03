@@ -89,7 +89,6 @@ class BILBO_Application:
         global ENABLE_SPEECH_OUTPUT
         ENABLE_SPEECH_OUTPUT = False
 
-
     # ==================================================================================================================
     def _newRobot_callback(self, bilbo, *args, **kwargs):
         if ENABLE_SPEECH_OUTPUT:
@@ -108,6 +107,7 @@ def run_bilbo_application():
     app.start()
 
     infinite_loop()
+
 
 if __name__ == '__main__':
     run_bilbo_application()

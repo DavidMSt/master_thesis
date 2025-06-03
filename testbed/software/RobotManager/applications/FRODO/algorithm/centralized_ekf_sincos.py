@@ -14,7 +14,6 @@ INDEX_Y = 1
 INDEX_SIN = 2
 INDEX_COS = 3
 
-
 INDEX_PSI = 2
 
 INDEX_V = 0
@@ -252,6 +251,10 @@ class CentralizedLocationAlgorithm:
         measurement_list = [f"{measurement.source}->{measurement.target}" for measurement in measurements]
 
         if len(measurements) > 0:
+
+            if self.step == 30:
+                pass
+
             # STEP 3: CALCULATE SPARSE MEASUREMENT JACOBIAN
             H = self.measurementJacobian_sparse(measurements)
 
@@ -262,7 +265,6 @@ class CentralizedLocationAlgorithm:
 
             # STEP 5: BUILD THE MEASUREMENT VECTOR
             y = self.buildMeasurementVector_sparse(measurements)
-
 
             # STEP 6: BUILD THE PREDICTED MEASUREMENT VECTOR
             y_est = self.measurementPrediction_sparse(measurements)
@@ -280,7 +282,6 @@ class CentralizedLocationAlgorithm:
             new_state = x_hat_pre
             new_covariance = P_hat_pre
 
-
         self.state = new_state
         self.state_covariance = new_covariance
 
@@ -295,12 +296,13 @@ class CentralizedLocationAlgorithm:
             agent.state[INDEX_Y] = state[INDEX_Y]
             agent.state[INDEX_PSI] = np.arctan2(state[INDEX_SIN], state[INDEX_COS])
 
-            state_covariance_aug = self.state_covariance[i * AGENT_STATE_DIM:(i + 1) * AGENT_STATE_DIM, i * AGENT_STATE_DIM:(i + 1) * AGENT_STATE_DIM]
+            state_covariance_aug = self.state_covariance[i * AGENT_STATE_DIM:(i + 1) * AGENT_STATE_DIM,
+                                   i * AGENT_STATE_DIM:(i + 1) * AGENT_STATE_DIM]
 
             J = np.array([
-                [1,0,0,0],
-                [0,1,0,0],
-                [0,0,state[INDEX_COS], -state[INDEX_SIN]],
+                [1, 0, 0, 0],
+                [0, 1, 0, 0],
+                [0, 0, state[INDEX_COS], -state[INDEX_SIN]],
             ])
 
             agent.state_covariance = J @ state_covariance_aug @ J.T
@@ -315,7 +317,6 @@ class CentralizedLocationAlgorithm:
                     f"{agent.id}: \t x: {agent.state[0]:.3f} \t y: {agent.state[1]:.3f} \t psi: {agent.state[2]:.2f} \t Cov: {np.linalg.norm(agent.state_covariance, 'fro'):.1f}")
 
             pass
-
 
     # ------------------------------------------------------------------------------------------------------------------
     # def augmentAgentState(self, state):
@@ -405,7 +406,7 @@ class CentralizedLocationAlgorithm:
         dynamics_noise = np.eye(4 * len(self.agents))
         for i in range(len(self.agents)):
             agent = self.getAgentByIndex(i)
-            dynamics_noise[i * 4:(i + 1) * 4, i * 4:(i + 1) * 4] = np.eye(4)*agent.dynamics_noise
+            dynamics_noise[i * 4:(i + 1) * 4, i * 4:(i + 1) * 4] = np.eye(4) * agent.dynamics_noise
 
         P_hat = F @ self.state_covariance @ F.T + dynamics_noise
 
@@ -565,8 +566,9 @@ class CentralizedLocationAlgorithm:
             agent_source = self.getAgentByIndex(measurement.source_index)
             agent_target = self.getAgentByIndex(measurement.target_index)
 
-            predicted_measurement = self.measurementPredictionAgent(agent_source_state_augmented=agent_source.state_augmented,
-                                                                    agent_target_state_augmented=agent_target.state_augmented)
+            predicted_measurement = self.measurementPredictionAgent(
+                agent_source_state_augmented=agent_source.state_augmented,
+                agent_target_state_augmented=agent_target.state_augmented)
 
             y_est[i * AGENT_STATE_DIM:(i + 1) * AGENT_STATE_DIM] = predicted_measurement.flatten()
 

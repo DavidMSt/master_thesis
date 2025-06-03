@@ -2,9 +2,9 @@
 :root {
     /* Layout variables */
     --headbar-height: 6vh;
-    --nav-height: 5vh;
+    --page-height: 5vh;
     --bottom-height: 30vh; /* height of the new bottom bar */
-    --app-bar-width: 10%;
+    --category-bar-width: 10%;
     --grid-gap: 2px;
     --grid-rows: 8;
     --grid-cols: 20;
@@ -26,10 +26,10 @@ html, body {
 
 body {
     display: grid;
-    grid-template-columns: var(--app-bar-width) auto;
+    grid-template-columns: var(--category-bar-width) auto;
     grid-template-rows:
     var(--headbar-height)
-    var(--nav-height)
+    var(--page-height)
     1fr
     var(--bottom-height);
     grid-template-areas:
@@ -60,7 +60,7 @@ body {
 }
 
 /* Application bar */
-#application_bar {
+#category_bar {
     grid-area: app;
     background-color: #99ff99;
     display: flex;

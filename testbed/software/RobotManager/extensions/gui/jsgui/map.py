@@ -697,13 +697,13 @@ class Map:
     _thread: threading.Thread
     _exit: bool = False
 
-    options: dict
+    config: dict
 
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self,
-                 options: dict = None,
+                 config: dict = None,
                  host='localhost',
-                 port=8091):
+                 port=8001):
 
         default_options = {
             'coordinate_system_size': 1,
@@ -715,6 +715,7 @@ class Map:
             'grid': 0.5,
             'initial_display': (12, 12, 0, 0),  # (width, height, zoom x, zoom y)
             'background_color': (1, 1, 1),
+            
             'grid_color': (0.7, 0.7, 0.7),
             'grid_width': 1,  # NEW,
             'major_grid_style': 'solid',  # NEW can be solid or dotted
@@ -723,7 +724,7 @@ class Map:
             'ticks_color': (0, 0, 0)
         }
 
-        self.options = {**default_options, **(options or {})}
+        self.config = {**default_options, **(config or {})}
 
         self.server = SyncWebsocketServer(host=host, port=port)
 
@@ -814,7 +815,7 @@ class Map:
         print(f"New client connected: {client}")
         message = {
             'command': 'init',
-            'options': self.options,
+            'options': self.config,
             'data': self._root.get_payload(),
         }
         self.server.sendToClient(
@@ -839,7 +840,7 @@ class Map:
 
 
 def main():
-    map = Map(options={
+    map = Map(config={
         'size': (12, 12),
         'grid': 0.3
     })

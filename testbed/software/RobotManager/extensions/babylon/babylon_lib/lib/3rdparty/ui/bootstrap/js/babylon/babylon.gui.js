@@ -963,9 +963,9 @@ var AdvancedDynamicTexture = /** @class */ (function (_super) {
             container = this._rootContainer;
         }
         func(container);
-        for (var _i = 0, _a = container.children; _i < _a.length; _i++) {
+        for (var _i = 0, _a = container.objects; _i < _a.length; _i++) {
             var child = _a[_i];
-            if (child.children) {
+            if (child.objects) {
                 this.executeOnAllControls(func, child);
                 continue;
             }
@@ -2608,8 +2608,8 @@ var ColorPicker = /** @class */ (function (_super) {
                     editSwatchMode = mode;
                 }
                 if (editSwatchMode) {
-                    for (var i = 0; i < swatchDrawer.children.length; i++) {
-                        var thisButton = swatchDrawer.children[i];
+                    for (var i = 0; i < swatchDrawer.objects.length; i++) {
+                        var thisButton = swatchDrawer.objects[i];
                         thisButton.textBlock.text = "b";
                     }
                     if (butEdit !== undefined) {
@@ -2617,8 +2617,8 @@ var ColorPicker = /** @class */ (function (_super) {
                     }
                 }
                 else {
-                    for (var i = 0; i < swatchDrawer.children.length; i++) {
-                        var thisButton = swatchDrawer.children[i];
+                    for (var i = 0; i < swatchDrawer.objects.length; i++) {
+                        var thisButton = swatchDrawer.objects[i];
                         thisButton.textBlock.text = "";
                     }
                     if (butEdit !== undefined) {
@@ -3482,7 +3482,7 @@ var Container = /** @class */ (function (_super) {
         return "Container";
     };
     Container.prototype._flagDescendantsAsMatrixDirty = function () {
-        for (var _i = 0, _a = this.children; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this.objects; _i < _a.length; _i++) {
             var child = _a[_i];
             child._markMatrixAsDirty();
         }
@@ -3493,7 +3493,7 @@ var Container = /** @class */ (function (_super) {
      * @returns the child control if found
      */
     Container.prototype.getChildByName = function (name) {
-        for (var _i = 0, _a = this.children; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this.objects; _i < _a.length; _i++) {
             var child = _a[_i];
             if (child.name === name) {
                 return child;
@@ -3508,7 +3508,7 @@ var Container = /** @class */ (function (_super) {
      * @returns the child control if found
      */
     Container.prototype.getChildByType = function (name, type) {
-        for (var _i = 0, _a = this.children; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this.objects; _i < _a.length; _i++) {
             var child = _a[_i];
             if (child.typeName === type) {
                 return child;
@@ -3522,7 +3522,7 @@ var Container = /** @class */ (function (_super) {
      * @returns true if the control is in child list
      */
     Container.prototype.containsControl = function (control) {
-        return this.children.indexOf(control) !== -1;
+        return this.objects.indexOf(control) !== -1;
     };
     /**
      * Adds a new control to the current container
@@ -3548,7 +3548,7 @@ var Container = /** @class */ (function (_super) {
      * @returns the current container
      */
     Container.prototype.clearControls = function () {
-        var children = this.children.slice();
+        var children = this.objects.slice();
         for (var _i = 0, children_1 = children; _i < children_1.length; _i++) {
             var child = children_1[_i];
             this.removeControl(child);
@@ -3728,11 +3728,11 @@ var Container = /** @class */ (function (_super) {
     };
     Container.prototype.getDescendantsToRef = function (results, directDescendantsOnly, predicate) {
         if (directDescendantsOnly === void 0) { directDescendantsOnly = false; }
-        if (!this.children) {
+        if (!this.objects) {
             return;
         }
-        for (var index = 0; index < this.children.length; index++) {
-            var item = this.children[index];
+        for (var index = 0; index < this.objects.length; index++) {
+            var item = this.objects[index];
             if (!predicate || predicate(item)) {
                 results.push(item);
             }
@@ -3772,8 +3772,8 @@ var Container = /** @class */ (function (_super) {
     /** Releases associated resources */
     Container.prototype.dispose = function () {
         _super.prototype.dispose.call(this);
-        for (var index = this.children.length - 1; index >= 0; index--) {
-            this.children[index].dispose();
+        for (var index = this.objects.length - 1; index >= 0; index--) {
+            this.objects[index].dispose();
         }
     };
     return Container;
@@ -6232,7 +6232,7 @@ var Grid = /** @class */ (function (_super) {
         if (!cell) {
             return null;
         }
-        return cell.children;
+        return cell.objects;
     };
     /**
      * Gets a string representing the child cell info (row x column)
@@ -6247,7 +6247,7 @@ var Grid = /** @class */ (function (_super) {
             return;
         }
         _super.prototype.removeControl.call(this, cell);
-        for (var _i = 0, _a = cell.children; _i < _a.length; _i++) {
+        for (var _i = 0, _a = cell.objects; _i < _a.length; _i++) {
             var control = _a[_i];
             var childIndex = this._childControls.indexOf(control);
             if (childIndex !== -1) {
@@ -6261,7 +6261,7 @@ var Grid = /** @class */ (function (_super) {
             return;
         }
         this._cells[previousKey] = this._cells[key];
-        for (var _i = 0, _a = this._cells[previousKey].children; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this._cells[previousKey].objects; _i < _a.length; _i++) {
             var control = _a[_i];
             control._tag = previousKey;
         }
@@ -9574,7 +9574,7 @@ var ScrollViewer = /** @class */ (function (_super) {
     Object.defineProperty(ScrollViewer.prototype, "children", {
         /** Gets the list of children */
         get: function () {
-            return this._window.children;
+            return this._window.objects;
         },
         enumerable: false,
         configurable: true
@@ -10374,7 +10374,7 @@ var _ScrollViewerWindow = /** @class */ (function (_super) {
         }
         var maxWidth = this.parentClientWidth;
         var maxHeight = this.parentClientHeight;
-        for (var _i = 0, _a = this.children; _i < _a.length; _i++) {
+        for (var _i = 0, _a = this.objects; _i < _a.length; _i++) {
             var child = _a[_i];
             if (!child.isVisible || child.notRenderable) {
                 continue;
@@ -10562,19 +10562,19 @@ var CheckboxGroup = /** @class */ (function (_super) {
     };
     /** @hidden */
     CheckboxGroup.prototype._setSelectorLabel = function (selectorNb, label) {
-        this.selectors[selectorNb].children[1].text = label;
+        this.selectors[selectorNb].objects[1].text = label;
     };
     /** @hidden */
     CheckboxGroup.prototype._setSelectorLabelColor = function (selectorNb, color) {
-        this.selectors[selectorNb].children[1].color = color;
+        this.selectors[selectorNb].objects[1].color = color;
     };
     /** @hidden */
     CheckboxGroup.prototype._setSelectorButtonColor = function (selectorNb, color) {
-        this.selectors[selectorNb].children[0].color = color;
+        this.selectors[selectorNb].objects[0].color = color;
     };
     /** @hidden */
     CheckboxGroup.prototype._setSelectorButtonBackground = function (selectorNb, color) {
-        this.selectors[selectorNb].children[0].background = color;
+        this.selectors[selectorNb].objects[0].background = color;
     };
     return CheckboxGroup;
 }(SelectorGroup));
@@ -10625,19 +10625,19 @@ var RadioGroup = /** @class */ (function (_super) {
     };
     /** @hidden */
     RadioGroup.prototype._setSelectorLabel = function (selectorNb, label) {
-        this.selectors[selectorNb].children[1].text = label;
+        this.selectors[selectorNb].objects[1].text = label;
     };
     /** @hidden */
     RadioGroup.prototype._setSelectorLabelColor = function (selectorNb, color) {
-        this.selectors[selectorNb].children[1].color = color;
+        this.selectors[selectorNb].objects[1].color = color;
     };
     /** @hidden */
     RadioGroup.prototype._setSelectorButtonColor = function (selectorNb, color) {
-        this.selectors[selectorNb].children[0].color = color;
+        this.selectors[selectorNb].objects[0].color = color;
     };
     /** @hidden */
     RadioGroup.prototype._setSelectorButtonBackground = function (selectorNb, color) {
-        this.selectors[selectorNb].children[0].background = color;
+        this.selectors[selectorNb].objects[0].background = color;
     };
     return RadioGroup;
 }(SelectorGroup));
@@ -10681,14 +10681,14 @@ var SliderGroup = /** @class */ (function (_super) {
         button.left = "4px";
         button.paddingBottom = "4px";
         button.onValueChangedObservable.add(function (value) {
-            button.parent.children[0].text = button.parent.children[0].name + ": " + onValueChange(value) + " " + button.name;
+            button.parent.objects[0].text = button.parent.objects[0].name + ": " + onValueChange(value) + " " + button.name;
             func(value);
         });
         var _selector = _control__WEBPACK_IMPORTED_MODULE_3__["Control"].AddHeader(button, label + ": " + onValueChange(value) + " " + unit, "30px", { isHorizontal: false, controlFirst: false });
         _selector.height = "60px";
         _selector.horizontalAlignment = _control__WEBPACK_IMPORTED_MODULE_3__["Control"].HORIZONTAL_ALIGNMENT_LEFT;
         _selector.left = "4px";
-        _selector.children[0].name = label;
+        _selector.objects[0].name = label;
         this.groupPanel.addControl(_selector);
         this.selectors.push(_selector);
         if (this.groupPanel.parent && this.groupPanel.parent.parent) {
@@ -10698,20 +10698,20 @@ var SliderGroup = /** @class */ (function (_super) {
     };
     /** @hidden */
     SliderGroup.prototype._setSelectorLabel = function (selectorNb, label) {
-        this.selectors[selectorNb].children[0].name = label;
-        this.selectors[selectorNb].children[0].text = label + ": " + this.selectors[selectorNb].children[1].value + " " + this.selectors[selectorNb].children[1].name;
+        this.selectors[selectorNb].objects[0].name = label;
+        this.selectors[selectorNb].objects[0].text = label + ": " + this.selectors[selectorNb].objects[1].value + " " + this.selectors[selectorNb].objects[1].name;
     };
     /** @hidden */
     SliderGroup.prototype._setSelectorLabelColor = function (selectorNb, color) {
-        this.selectors[selectorNb].children[0].color = color;
+        this.selectors[selectorNb].objects[0].color = color;
     };
     /** @hidden */
     SliderGroup.prototype._setSelectorButtonColor = function (selectorNb, color) {
-        this.selectors[selectorNb].children[1].color = color;
+        this.selectors[selectorNb].objects[1].color = color;
     };
     /** @hidden */
     SliderGroup.prototype._setSelectorButtonBackground = function (selectorNb, color) {
-        this.selectors[selectorNb].children[1].background = color;
+        this.selectors[selectorNb].objects[1].background = color;
     };
     return SliderGroup;
 }(SelectorGroup));
@@ -10788,7 +10788,7 @@ var SelectionPanel = /** @class */ (function (_super) {
     });
     SelectionPanel.prototype._setHeaderColor = function () {
         for (var i = 0; i < this._groups.length; i++) {
-            this._groups[i].groupPanel.children[0].color = this._headerColor;
+            this._groups[i].groupPanel.objects[0].color = this._headerColor;
         }
     };
     Object.defineProperty(SelectionPanel.prototype, "buttonColor", {
@@ -10874,7 +10874,7 @@ var SelectionPanel = /** @class */ (function (_super) {
     });
     SelectionPanel.prototype._setBarColor = function () {
         for (var i = 0; i < this._bars.length; i++) {
-            this._bars[i].children[0].background = this._barColor;
+            this._bars[i].objects[0].background = this._barColor;
         }
     };
     Object.defineProperty(SelectionPanel.prototype, "barHeight", {
@@ -10894,7 +10894,7 @@ var SelectionPanel = /** @class */ (function (_super) {
     });
     SelectionPanel.prototype._setBarHeight = function () {
         for (var i = 0; i < this._bars.length; i++) {
-            this._bars[i].children[0].height = this._barHeight;
+            this._bars[i].objects[0].height = this._barHeight;
         }
     };
     Object.defineProperty(SelectionPanel.prototype, "spacerHeight", {
@@ -10943,7 +10943,7 @@ var SelectionPanel = /** @class */ (function (_super) {
         }
         this._panel.addControl(group.groupPanel);
         this._groups.push(group);
-        group.groupPanel.children[0].color = this._headerColor;
+        group.groupPanel.objects[0].color = this._headerColor;
         for (var j = 0; j < group.selectors.length; j++) {
             group._setSelectorButtonColor(j, this._buttonColor);
             group._setSelectorButtonBackground(j, this._buttonBackground);
@@ -10973,7 +10973,7 @@ var SelectionPanel = /** @class */ (function (_super) {
             return;
         }
         var group = this._groups[groupNb];
-        group.groupPanel.children[0].text = label;
+        group.groupPanel.objects[0].text = label;
     };
     /** Change selector label to the one given
      * @param label is the new selector label
@@ -13305,21 +13305,21 @@ var VirtualKeyboard = /** @class */ (function (_super) {
      * @param shiftState defines the new shift state
      */
     VirtualKeyboard.prototype.applyShiftState = function (shiftState) {
-        if (!this.children) {
+        if (!this.objects) {
             return;
         }
-        for (var i = 0; i < this.children.length; i++) {
-            var row = this.children[i];
-            if (!row || !row.children) {
+        for (var i = 0; i < this.objects.length; i++) {
+            var row = this.objects[i];
+            if (!row || !row.objects) {
                 continue;
             }
             var rowContainer = row;
-            for (var j = 0; j < rowContainer.children.length; j++) {
-                var button = rowContainer.children[j];
-                if (!button || !button.children[0]) {
+            for (var j = 0; j < rowContainer.objects.length; j++) {
+                var button = rowContainer.objects[j];
+                if (!button || !button.objects[0]) {
                     continue;
                 }
-                var button_tblock = button.children[0];
+                var button_tblock = button.objects[0];
                 if (button_tblock.text === "\u21E7") {
                     button.color = (shiftState ? this.shiftButtonColor : this.defaultButtonColor);
                     button.thickness = (shiftState > 1 ? this.selectedShiftThickness : 0);
@@ -14541,7 +14541,7 @@ var XmlLoader = /** @class */ (function () {
         var width;
         var height;
         var columns;
-        var rows = node.children;
+        var rows = node.objects;
         var cells;
         var isPixel = false;
         var cellNode;
@@ -14556,7 +14556,7 @@ var XmlLoader = /** @class */ (function () {
                 throw "XmlLoader Exception : Expecting Row node, received " + rows[i].nodeName;
             }
             rowNumber += 1;
-            columns = rows[i].children;
+            columns = rows[i].objects;
             if (!rows[i].attributes.getNamedItem("height")) {
                 throw "XmlLoader Exception : Height must be defined for grid rows";
             }
@@ -14582,7 +14582,7 @@ var XmlLoader = /** @class */ (function () {
                     isPixel = columns[j].attributes.getNamedItem("isPixel") ? JSON.parse(columns[j].attributes.getNamedItem("isPixel").nodeValue) : false;
                     guiNode.addColumnDefinition(width, isPixel);
                 }
-                cells = columns[j].children;
+                cells = columns[j].objects;
                 for (var k = 0; k < cells.length; k++) {
                     if (cells[k].nodeType != this._nodeTypes.element) {
                         continue;

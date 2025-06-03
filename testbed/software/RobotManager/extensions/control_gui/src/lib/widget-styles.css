@@ -9,9 +9,52 @@
     /* …any other default spacing, borders, etc… */
 }
 
+/* Continuous‐update icon */
+.continuousIcon {
+    position: absolute;
+    bottom: 2px; /* or whatever padding you prefer */
+    right: 2px;
+    font-size: 0.6em;
+    opacity: 0.7;
+    pointer-events: none;
+    user-select: none;
+}
+
+.dragging {
+    filter: brightness(1.1);
+    transition: filter 100ms ease-out;
+    cursor: pointer;
+}
+
+.highlight {
+    filter: brightness(1.25);
+    transition: filter 100ms ease-out;
+}
+
+
+@keyframes blink-accept {
+    0% {
+        filter: brightness(1);
+    }
+    20% {
+        filter: brightness(1.3);
+    }
+    100% {
+        filter: brightness(1);
+    }
+}
+
+
+.accepted {
+    animation: blink-accept 200ms ease-out;
+}
+
+/* =================================================================================================== */
+
+
 .buttonItem {
     /*border: none;*/
-    border: 1.5px solid #000;
+    border: 1.5px solid rgba(255, 255, 255, 0.2);
     /*border-radius: 5px;*/
     /*padding: 0.5em 1em;*/
     padding-left: 2px;
@@ -30,6 +73,7 @@
     animation: blink 0.3s ease;
 }
 
+.buttonItem.pressed,
 .buttonItem:active {
     /* move it down slightly */
     transform: translateY(1px);
@@ -110,31 +154,6 @@
     top: 0;
 }
 
-/* ==== Slider ticks ==== */
-/*.sliderWidget .sliderTick {*/
-/*    position: absolute;*/
-/*    background-color: currentColor;*/
-/*    opacity: 0.5;*/
-/*    pointer-events: none;*/
-/*}*/
-/* give ticks a visible size and bring them to the front */
-/*.sliderWidget .sliderTick {*/
-/*  position: absolute;*/
-/*  background-color: currentColor;*/
-/*  opacity: 0.2;*/
-/*  pointer-events: none;*/
-
-/*  !* visible thickness: *!*/
-/*  width: 1px;      !* for vertical bars, this will become its thickness *!*/
-/*  height: 10px;    !* for horizontal bars, likewise *!*/
-
-/*  !* center the tick on its position *!*/
-/*  transform: translateX(-50%) translateY(-50%);*/
-
-/*  !* make sure it sits on top of the fill *!*/
-/*  z-index: 3;*/
-/*}*/
-
 /* Horizontal sliders: ticks are thin vertical bars spanning the full height */
 .sliderWidget[data-direction="horizontal"] .sliderTick {
     width: 1px; /* tick thickness */
@@ -162,31 +181,6 @@
 }
 
 
-/* ——— Blink animation ——— */
-@keyframes blink-accept {
-    0% {
-        filter: brightness(1);
-    }
-    20% {
-        filter: brightness(1.3);
-    }
-    100% {
-        filter: brightness(1);
-    }
-}
-
-/* When a slider “accepts” its new value (on pointerup, no continuousUpdates) */
-.sliderWidget.accepted {
-    animation: blink-accept 200ms ease-out;
-}
-
-/* While dragging with continuousUpdates=true */
-.sliderWidget.dragging {
-    filter: brightness(1.1);
-    transition: filter 100ms ease-out;
-}
-
-
 /* Multi-State Button Widget Styles */
 .multiStateButtonMain {
     width: 100%;
@@ -211,7 +205,7 @@
     left: 0;
     right: 0;
     text-align: center;
-    font-size: 12px;
+    font-size: 8pt;
     font-weight: bold;
 }
 
@@ -238,10 +232,40 @@
     height: 8px;
     border: 1px solid #ccc;
     border-radius: 50%;
+    position: relative;
 }
 
 .msbIndicator.active {
     background-color: #ccc;
+}
+
+/* When you hover over the small dot, show a custom bubble: */
+.msbIndicator:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 110%; /* place it just above the dot */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.75);
+    color: #fff;
+    padding: 4px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    font-size: 10px;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* tiny arrow pointing down */
+.msbIndicator:hover::before {
+    content: "";
+    position: absolute;
+    bottom: 100%; /* right at the bottom of the bubble */
+    left: 50%;
+    transform: translateX(-50%);
+    border-left: 5px solid transparent;
+    border-right: 5px solid transparent;
+    border-top: 5px solid rgba(0, 0, 0, 0.75);
 }
 
 
@@ -289,7 +313,7 @@
 
 .msSelectTitle {
     position: absolute;
-    top: 5px;
+    top: 2px;
     left: 0;
     right: 0;
     text-align: center;
@@ -298,21 +322,63 @@
     pointer-events: none;
 }
 
-
-@keyframes blink-accept {
-    0% {
-        filter: brightness(1);
-    }
-    20% {
-        filter: brightness(1.1);
-    }
-    100% {
-        filter: brightness(1);
-    }
+/* --- hook layout by data-attribute --- */
+.multiSelectWidget[data-title-position="top"] {
+    /* default: title above, centered */
+    display: block;
+    padding-top: 24px; /* make room for the title */
+    justify-content: center;
 }
 
-.multiSelectWidget.accepted {
-    animation: blink-accept 200ms ease-out;
+.multiSelectWidget[data-title-position="top"] .msSelectTitle {
+    position: absolute;
+    top: 2px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 12px;
+}
+
+/* --- when titlePosition = left --- */
+.multiSelectWidget[data-title-position="left"] {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 8px;
+}
+
+.multiSelectWidget[data-title-position="left"] .msSelectTitle {
+    position: static; /* flow in the flex row */
+    margin-right: 8px;
+    font-size: 14px; /* a bit bigger */
+    text-align: left;
+}
+
+.multiSelectWidget[data-title-position="left"] .msSelectValue {
+    flex: 1;
+    text-align: right;
+    padding-right: 8px;
+}
+
+/* ensure arrow stays at right edge */
+.multiSelectWidget[data-title-position="left"] .msSelectDropdown {
+    right: 5px;
+    bottom: 2px;
+}
+
+/* -----------------------------
+   Multi-Select: top-title tweaks
+   ----------------------------- */
+.multiSelectWidget[data-title-position="top"] {
+    display: block; /* your existing rule */
+    padding-top: 24px; /* your existing rule */
+    text-align: center; /* ← center all inline content */
+}
+
+.multiSelectWidget[data-title-position="top"] .msSelectValue {
+    display: block; /* span will now fill the width */
+    width: 100%; /* so its text-align applies */
+    text-align: center; /* ← center the value text */
 }
 
 
@@ -334,6 +400,10 @@
     font-size: 14px;
     padding: 2px;
     border: 1.5px solid #444;
+}
+
+.rotaryDialWidget .dialWrapper canvas:hover {
+    cursor: pointer;
 }
 
 /* Title */
@@ -387,12 +457,12 @@
 }
 
 .rotaryDialWidget[data-title-position="left"] .dialWrapper {
-    width: 80%;
-    height: 80%;
+    width: 100%;
+    height: 100%;
 }
 
 .rotaryDialWidget[data-title-position="left"] .dialWrapper .value {
-    font-size: 1em;
+    font-size: 0.9em;
 }
 
 /* Canvas setup */
@@ -409,264 +479,6 @@
 }
 
 
-/* Dragging & accepted animations */
-.rotaryDialWidget.dragging {
-    filter: brightness(1.25);
-    transition: filter 100ms ease-out;
-}
-
-.rotaryDialWidget.accepted {
-    animation: blink-accept 200ms ease-out;
-}
-
-@keyframes blink-accept {
-    0% {
-        filter: brightness(1);
-    }
-    20% {
-        filter: brightness(1.3);
-    }
-    100% {
-        filter: brightness(1);
-    }
-}
-
-/* blink animation */
-@keyframes blink-accept {
-    0% {
-        filter: brightness(1);
-    }
-    20% {
-        filter: brightness(1.3);
-    }
-    100% {
-        filter: brightness(1);
-    }
-}
-
-/* blink animation */
-@keyframes blink-accept {
-    0% {
-        filter: brightness(1);
-    }
-    20% {
-        filter: brightness(1.3);
-    }
-    100% {
-        filter: brightness(1);
-    }
-}
-
-/* blink animation */
-@keyframes blink-accept {
-    0% {
-        filter: brightness(1);
-    }
-    20% {
-        filter: brightness(1.3);
-    }
-    100% {
-        filter: brightness(1);
-    }
-}
-
-
-/* dragging = bright, accepted = blink */
-.dragging {
-    filter: brightness(1.25);
-    transition: filter 100ms ease-out;
-}
-
-.accepted {
-    animation: blink-accept 200ms ease-out;
-}
-
-/* Continuous‐update icon */
-.continuousIcon {
-    position: absolute;
-    bottom: 2px; /* or whatever padding you prefer */
-    right: 2px;
-    font-size: 0.6em;
-    opacity: 0.7;
-    pointer-events: none;
-    user-select: none;
-}
-
-/* —————————————————————————————
-   ClassicSliderWidget styles (UPDATED)
-   ————————————————————————————— */
-
-/*!* container *!*/
-/*.classicSliderWidget {*/
-/*    position: relative;*/
-/*    display: flex;*/
-/*    padding: 8px;*/
-/*    box-sizing: border-box;*/
-/*    background-color: inherit;*/
-/*    color: inherit;*/
-/*    overflow: hidden;*/
-/*}*/
-
-/*!* title *!*/
-/*.classicSliderWidget[data-title-position="top"] {*/
-/*    flex-direction: column;*/
-/*}*/
-
-/*.classicSliderWidget[data-title-position="left"] {*/
-/*    flex-direction: row;*/
-/*}*/
-
-/*.csTitle {*/
-/*    font-size: 12px;*/
-/*    font-weight: bold;*/
-/*}*/
-
-/*.classicSliderWidget[data-title-position="top"] .csTitle {*/
-/*    margin-bottom: 4px;*/
-/*}*/
-
-/*.classicSliderWidget[data-title-position="left"] .csTitle {*/
-/*    margin-right: 8px;*/
-/*}*/
-
-/*!* main area *!*/
-/*.csMain {*/
-/*    display: flex;*/
-/*    width: 100%;*/
-/*    height: 100%;*/
-/*    justify-content: center;*/
-/*    align-items: center;*/
-/*}*/
-
-/*!* horizontal: value underneath *!*/
-/*.classicSliderWidget[data-value-position="center"] .csMain {*/
-/*    flex-direction: column;*/
-/*}*/
-
-/*.classicSliderWidget[data-value-position="center"] .csValue {*/
-/*    margin-top: 4px;*/
-/*}*/
-
-/*!* horizontal: value right *!*/
-/*.classicSliderWidget[data-value-position="right"] .csMain {*/
-/*    flex-direction: row;*/
-/*}*/
-
-/*.classicSliderWidget[data-value-position="right"] .csValue {*/
-/*    margin-left: 8px;*/
-/*}*/
-
-/*!* value text *!*/
-/*.csValue {*/
-/*    font-size: 14px;*/
-/*}*/
-
-/*!* — track container — *!*/
-/*!* full-width/tall but padded by handle radius (8px each side) *!*/
-/*.csSliderContainer {*/
-/*    position: relative;*/
-/*    width: 100%;*/
-/*    height: 8px;*/
-/*    padding: 0 8px;*/
-/*    box-sizing: border-box;*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="vertical"] .csSliderContainer {*/
-/*    width: 8px;*/
-/*    height: 100%;*/
-/*    padding: 8px 0;*/
-/*}*/
-
-/*!* stem & fill *!*/
-/*.csStem,*/
-/*.csFill {*/
-/*    position: absolute;*/
-/*    border-radius: 4px;*/
-/*}*/
-
-/*.csStem {*/
-/*    background-color: var(--stem-color);*/
-/*}*/
-
-/*.csFill {*/
-/*    background-color: var(--handle-color);*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="horizontal"] .csStem {*/
-/*    top: 50%;*/
-/*    left: 0;*/
-/*    width: 100%;*/
-/*    height: 4px;*/
-/*    transform: translateY(-50%);*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="horizontal"] .csFill {*/
-/*    top: 0;*/
-/*    left: 0;*/
-/*    height: 100%;*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="vertical"] .csStem {*/
-/*    top: 0;*/
-/*    left: 50%;*/
-/*    width: 4px;*/
-/*    height: 100%;*/
-/*    transform: translateX(-50%);*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="vertical"] .csFill {*/
-/*    left: 0;*/
-/*    bottom: 0;*/
-/*    width: 100%;*/
-/*}*/
-
-/*!* ticks — now locked to the padded ends *!*/
-/*.csTick {*/
-/*    position: absolute;*/
-/*    background-color: var(--stem-color);*/
-/*    pointer-events: none;*/
-/*    opacity: 1;*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="horizontal"] .csTick {*/
-/*    top: 0;*/
-/*    width: 1px;*/
-/*    height: 100%;*/
-/*    transform: translateX(-50%);*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="vertical"] .csTick {*/
-/*    left: 0;*/
-/*    height: 1px;*/
-/*    width: 100%;*/
-/*    transform: translateY(-50%);*/
-/*}*/
-
-/*!* handle *!*/
-/*.csHandle {*/
-/*    position: absolute;*/
-/*    width: 16px;*/
-/*    height: 16px;*/
-/*    background-color: var(--handle-color);*/
-/*    border-radius: 50%;*/
-/*    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);*/
-/*    pointer-events: none;*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="horizontal"] .csHandle {*/
-/*    top: 50%;*/
-/*    transform: translate(-50%, -50%);*/
-/*}*/
-
-/*.classicSliderWidget[data-direction="vertical"] .csHandle {*/
-/*    left: 50%;*/
-/*    transform: translate(-50%, 50%);*/
-/*}*/
-
-/*.classicSliderWidget.accepted {*/
-/*    animation: blink-accept 200ms ease-out;*/
-/*}*/
-
 /* —————————————————————————————
    ClassicSliderWidget styles (UPDATED)
    ————————————————————————————— */
@@ -682,20 +494,25 @@
     overflow: hidden;
 }
 
+
 /* title positioning */
 .classicSliderWidget[data-title-position="top"] {
     flex-direction: column;
 }
+
 .classicSliderWidget[data-title-position="left"] {
     flex-direction: row;
 }
+
 .csTitle {
     font-size: 12px;
     font-weight: bold;
 }
+
 .classicSliderWidget[data-title-position="top"] .csTitle {
     margin-bottom: 4px;
 }
+
 .classicSliderWidget[data-title-position="left"] .csTitle {
     margin-right: 8px;
 }
@@ -713,12 +530,17 @@
 .classicSliderWidget[data-value-position="center"] .csMain {
     flex-direction: column;
 }
+
 .classicSliderWidget[data-value-position="center"] .csValue {
     margin-top: 4px;
+    width: 100%;
+    text-align: center;
 }
+
 .classicSliderWidget[data-value-position="right"] .csMain {
     flex-direction: row;
 }
+
 .classicSliderWidget[data-value-position="right"] .csValue {
     margin-left: 8px;
 }
@@ -739,6 +561,7 @@
     padding: 0 8px;
     box-sizing: border-box;
 }
+
 .classicSliderWidget[data-direction="vertical"] .csSliderContainer {
     width: 8px;
     height: 100%;
@@ -750,13 +573,18 @@
 .csFill {
     position: absolute;
     border-radius: 4px;
+    cursor: pointer;
 }
+
 .csStem {
     background-color: var(--stem-color);
+
 }
+
 .csFill {
     background-color: var(--handle-color);
 }
+
 .classicSliderWidget[data-direction="horizontal"] .csStem {
     top: 50%;
     left: 0;
@@ -764,11 +592,13 @@
     height: 4px;
     transform: translateY(-50%);
 }
+
 .classicSliderWidget[data-direction="horizontal"] .csFill {
     top: 0;
     left: 0;
     height: 100%;
 }
+
 .classicSliderWidget[data-direction="vertical"] .csStem {
     top: 0;
     left: 50%;
@@ -776,6 +606,7 @@
     height: 100%;
     transform: translateX(-50%);
 }
+
 .classicSliderWidget[data-direction="vertical"] .csFill {
     left: 0;
     bottom: 0;
@@ -789,12 +620,14 @@
     pointer-events: none;
     opacity: 1;
 }
+
 .classicSliderWidget[data-direction="horizontal"] .csTick {
     top: 0;
     width: 1px;
     height: 100%;
     transform: translateX(-50%);
 }
+
 .classicSliderWidget[data-direction="vertical"] .csTick {
     left: 0;
     height: 1px;
@@ -810,12 +643,15 @@
     background-color: var(--handle-color);
     border-radius: 50%;
     box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-    pointer-events: none;
+    /*pointer-events: none;*/
+    cursor: pointer;
 }
+
 .classicSliderWidget[data-direction="horizontal"] .csHandle {
     top: 50%;
     transform: translate(-50%, -50%);
 }
+
 .classicSliderWidget[data-direction="vertical"] .csHandle {
     left: 50%;
     transform: translate(-50%, 50%);
@@ -825,19 +661,364 @@
 .classicSliderWidget.accepted {
     animation: blink-accept 200ms ease-out;
 }
+
 @keyframes blink-accept {
-    0%   { filter: brightness(1); }
-    20%  { filter: brightness(1.3); }
-    100% { filter: brightness(1); }
+    0% {
+        filter: brightness(1);
+    }
+    20% {
+        filter: brightness(1.3);
+    }
+    100% {
+        filter: brightness(1);
+    }
 }
 
-/* continuous‐update icon */
-.continuousIcon {
-    position: absolute;
-    bottom: 2px;
-    right: 2px;
-    font-size: 0.6em;
-    opacity: 0.7;
+/* container flex & centering */
+.digitalNumberWidget {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* default: title on top */
+    flex-direction: column;
+    padding: 4px;
+}
+
+/* title styling */
+.digitalNumberWidget .digitalNumberTitle {
+    font-size: 12px;
+    font-weight: bold;
+    margin: 0;
     pointer-events: none;
     user-select: none;
 }
+
+/* value styling */
+.digitalNumberWidget .digitalNumberValue {
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    white-space: pre;
+    text-align: right;
+    pointer-events: none;
+    user-select: none;
+    margin-top: 4px; /* space from title when stacked */
+}
+
+/* —— left position override —— */
+.digitalNumberWidget[data-title-position="left"] {
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.digitalNumberWidget[data-title-position="left"] .digitalNumberTitle {
+    margin: 0 8px 0 0;
+    font-size: 14px; /* bump up a bit */
+}
+
+.digitalNumberWidget[data-title-position="left"] .digitalNumberValue {
+    margin-top: 0; /* cancel the top margin */
+}
+
+.digitalNumberWidget .leadingZero {
+    opacity: 0.2;
+}
+
+
+/* TextWidget */
+.textWidget {
+    box-sizing: border-box;
+    overflow: hidden;
+    /* display:flex set inline */
+}
+
+/* Title */
+.textWidget .textTitle {
+    /* small bold header */
+    font-size: 0.75em;
+    font-weight: bold;
+    margin-bottom: 0.25em;
+}
+
+/* Content: allow HTML, wrap and preserve lines */
+.textWidget .textContent {
+    white-space: pre-wrap; /* respect \n in text */
+    word-break: break-word; /* wrap long words */
+    text-align: inherit; /* inherit alignment */
+}
+
+
+/* ================= TextInputWidget ================= */
+/* ─── in your CSS file ────────────────────────────────────────────────────── */
+
+/* TextInputWidget container */
+.textInputWidget {
+    position: relative;
+    box-sizing: border-box;
+    padding: 4px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+}
+
+/* when title is on the left */
+.textInputWidget[data-title-position="left"] {
+    flex-direction: row;
+    align-items: center;
+}
+
+/* the title */
+.textInputWidget .tiTitle {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: inherit;
+    margin-bottom: 4px;
+}
+
+.textInputWidget[data-title-position="left"] .tiTitle {
+    margin: 0 4px 0 0;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+/* the input field */
+.textInputWidget .tiInput {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1px 3px;
+    font-size: 10pt;
+    border: 1px solid #888;
+    border-radius: 4px;
+    background-color: var(--ti-field-bg, #fff);
+    color: var(--ti-field-color, #000);
+    /*margin-right: 4px; !* small gap on the right *!*/
+    text-align: center;
+}
+
+.textInputWidget[data-title-position="top"] .tiInput {
+    margin-right: 0;
+    margin-top: 4px;
+}
+
+/* success “blink” (reuse your existing keyframes) */
+.textInputWidget.accepted {
+    animation: blink-accept 200ms ease-out;
+}
+
+/* error shake + red blink */
+@keyframes ti-shake {
+    0% {
+        transform: translateX(0)
+    }
+    25% {
+        transform: translateX(-4px)
+    }
+    50% {
+        transform: translateX(4px)
+    }
+    75% {
+        transform: translateX(-4px)
+    }
+    100% {
+        transform: translateX(0)
+    }
+}
+
+@keyframes ti-blink-error {
+    0%, 100% {
+        border-color: red
+    }
+    50% {
+        border-color: transparent
+    }
+}
+
+.textInputWidget.error {
+    /* run shake AND border-blink */
+    animation: ti-shake 300ms ease,
+    ti-blink-error 400ms ease;
+}
+
+
+/* =================== StatusWidget =================== */
+/* =================== StatusWidget =================== */
+
+.statusWidget {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+.statusWidget table {
+    width: 100%;
+    height: 100%;
+    table-layout: fixed;
+    border-collapse: collapse;
+}
+
+.statusWidget td {
+    padding: 0 4px;
+    vertical-align: middle;
+    border: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* font-size now inherited from container */
+}
+
+.statusWidget td:nth-child(1) {
+    width: 10%;
+    text-align: center;
+}
+
+.statusWidget td:nth-child(2) {
+    text-align: left;
+}
+
+.statusWidget td:nth-child(3) {
+    text-align: left;
+}
+
+.statusMarker {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    margin: 0;
+}
+
+/* === TableWidget styles (objects.css) === */
+.tableWidget {
+    display: block;
+    width: 100%;
+    height: 100%;
+    box-sizing: border-box;
+    overflow: hidden; /* JS controls scroll */
+}
+
+.tableWidget table {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+/* adjust this padding to reduce internal vertical space */
+.tableWidget th,
+.tableWidget td {
+    padding: 4px 8px; /* ← shrink top/bottom padding here */
+    padding-bottom: 2px;
+    padding-top: 2px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.tableWidget th {
+    font-weight: bold;
+    text-align: left;
+}
+
+.tableWidget td {
+    /* inherits font-size & colors inline */
+}
+
+.tableWidget {
+    /* … your existing rules … */
+    --scrollbar-track: #fafafa; /* fallback */
+    --scrollbar-thumb: #ddd; /* fallback */
+}
+
+/* WebKit (Chrome, Safari, Edge) */
+.tableWidget::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.tableWidget::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+}
+
+.tableWidget::-webkit-scrollbar-thumb {
+    background-color: var(--scrollbar-thumb);
+    border-radius: 4px;
+    border: 2px solid var(--scrollbar-track);
+}
+
+/* Firefox */
+.tableWidget {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+
+/* ─── ObjectGroup container ─────────────────────────────────────────── */
+.object-group {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    overflow: hidden;
+    width: 100%;
+    height: 100%;
+}
+
+/* Title bar & Tabs bar */
+.object-group__titlebar,
+.object-group__tabs {
+    padding: 4px;
+    border-bottom: 1px solid var(--og-border-color, #444);
+    width: 100%;
+}
+
+.object-group__titlebar {
+    user-select: none;
+}
+
+.object-group__tabs {
+    text-align: center;
+    font-size: 0.9em;
+    color: #ccc;
+}
+
+/* ─── Inner grid ───────────────────────────────────────────────────── */
+.object-group__grid {
+    display: grid;
+    width: 100%;
+    gap: 2px; /* tiny gutter between cells */
+    min-height: 0; /* flex children can shrink for proper scrolling */
+    /*aspect-ratio: 1/1;*/
+}
+
+/* fit=true: evenly stretch rows/cols, no scrollbar */
+.object-group__grid[data-fit="true"] {
+    overflow-y: hidden;
+    /* grid-template-rows set inline by JS */
+}
+
+/* fit=false: force every row to be exactly one “cell-size” high,
+   computed in JS as (100% – total-gaps)/cols, hence square cells. */
+.object-group__grid[data-fit="false"] {
+    overflow-y: auto;
+    align-content: start;
+    grid-auto-rows: var(--og-cell-size);
+}
+
+/* ─── Make *all* grid items stretch to fill their track ─── */
+.object-group__grid .gridItem {
+    align-self: stretch;
+    justify-self: stretch;
+    width: 100%;
+    height: 100%;
+}
+
+/* ─── Placeholder empty-cells ───────────────────────────────────────── */
+/*.object-group__placeholder {*/
+/*    border: 1px dashed #666;*/
+/*    background-color: transparent;*/
+/*    aspect-ratio: 1/1;*/
+/*}*/

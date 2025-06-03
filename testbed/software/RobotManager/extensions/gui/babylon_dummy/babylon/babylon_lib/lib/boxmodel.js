@@ -2048,7 +2048,7 @@ class ImageMap extends Widget {
         }
 
         this.spacing  = options.spacing;
-        this.children = [];
+        this.objects = [];
 
         insertDOM(container, this.panel);
 
@@ -2062,7 +2062,7 @@ class ImageMap extends Widget {
     }
 
     insertChild(child) {
-        this.children.push(child);
+        this.objects.push(child);
         this.content.append(child);
 
         if (child.css != null)
@@ -2081,7 +2081,7 @@ class ImageMap extends Widget {
     set spacing(spacing) {
         this._spacing = spacing;
 
-        for (let i in this.children) {
+        for (let i in this.objects) {
             i.css('margin-top', spacing);
         }
     }

@@ -10,9 +10,6 @@ from core.utils.events import event_definition, ConditionEvent
 from core.utils.logging_utils import Logger
 from core.utils.orientation.orientation_3d import transform_vector_from_a_to_b_frame
 
-logger = Logger("Optitrack")
-logger.setLevel('INFO')
-
 
 # ======================================================================================================================
 @dataclasses.dataclass
@@ -78,6 +75,9 @@ class OptiTrack:
         self.natnetclient.mocap_data_callback = self._natnet_mocap_data_callback
         self.natnetclient.description_message_callback = self._natnet_description_callback
 
+        self.logger = Logger("Optitrack")
+        self.logger.setLevel('INFO')
+
         self.rigid_bodies = {}
         self.description_received = False
         self.first_data_frame_received = False
@@ -86,23 +86,28 @@ class OptiTrack:
         self.callbacks = OptiTrack_Callbacks()
         self.events = OptiTrack_Events()
 
+
     # === METHODS ======================================================================================================
 
     # ------------------------------------------------------------------------------------------------------------------
     def init(self):
         ...
 
-    # ------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------------------------
+
+
     def start(self):
         try:
             self.natnetclient.run()
         except Exception as e:
-            logger.error(f"Error while starting NatNetClient. Please make sure that Motive is running")
+            self.logger.error(f"Error while starting NatNetClient. Please make sure that Motive is running")
             return False
-        logger.info("Start Optitrack")
+        self.logger.info("Start Optitrack")
 
         return True
-    # === PRIVATE METHODS ==============================================================================================
+        # === PRIVATE METHODS ==============================================================================================
+
+
     def _natnet_description_callback(self, data):
         # Rigid Bodies
         for name, rigid_body_data in data["rigid_bodies"].items():
@@ -154,7 +159,9 @@ class OptiTrack:
         self.callbacks.description_received.call(self.rigid_bodies)
         self.events.description_received.set(self.rigid_bodies)
 
-    # ------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------------------------
+
+
     def _natnet_mocap_data_callback(self, data):
         if not self.description_received:
             return
@@ -164,8 +171,8 @@ class OptiTrack:
             self.first_data_frame_received = True
             self.running = True
 
-            logger.info(f"Optitrack running!")
-            logger.info(f"Rigid bodies: {[body.name for body in self.rigid_bodies.values()]}")
+            self.logger.info(f"Optitrack running!")
+            self.logger.info(f"Rigid bodies: {[body.name for body in self.rigid_bodies.values()]}")
 
         sample = {}
 
@@ -220,16 +227,17 @@ class OptiTrack:
 
         self.events.sample.set(resource=sample)
 
-    # ------------------------------------------------------------------------------------------------------------------
-    def _extract_initial_mocap_information(self, data):
+        # ------------------------------------------------------------------------------------------------------------------
 
+
+    def _extract_initial_mocap_information(self, data):
         for rigid_body_id, rigid_body_description in self.rigid_bodies.items():
             for marker_id, marker_description in rigid_body_description.markers.items():
                 if marker_description.label in data['labeled_markers']:
                     marker_size = data['labeled_markers'][marker_description.label]['size'][0]
                     marker_description.size = marker_size
                 else:
-                    logger.warning(f"Marker {marker_id} of rigid body \"{rigid_body_id}\" currently not visible. "
+                    self.logger.warning(f"Marker {marker_id} of rigid body \"{rigid_body_id}\" currently not visible. "
                                    f"It's size will be inferred from the other markers.")
 
             # loop again through the markers and check the ones that have not been set yet
@@ -240,12 +248,14 @@ class OptiTrack:
                              if marker_description.size is not None]
 
                     if len(sizes) == 0:
-                        logger.error(f"No markers of rigid body {rigid_body_id} are visible")
+                        self.logger.error(f"No markers of rigid body {rigid_body_id} are visible")
                         marker_description.size = 0
                     else:
                         marker_description.size = sum(sizes) / len(sizes)
 
-    # ------------------------------------------------------------------------------------------------------------------
+        # ------------------------------------------------------------------------------------------------------------------
+
+
     @staticmethod
     def _encode_marker_label(asset_id, marker_index):
         """
@@ -261,6 +271,7 @@ class OptiTrack:
           int: The encoded marker id.
         """
         return (asset_id << 16) + marker_index
+
 
     @staticmethod
     def _decode_marker_label(marker_id):
@@ -283,9 +294,9 @@ class OptiTrack:
         marker_index = marker_id & 0xFFFF  # 0xFFFF == 65535, gets the lower 16 bits
         return asset_id, marker_index
 
+
     @staticmethod
     def _calculate_rigid_body_marker(rigid_body_position, rigid_body_orientation, marker_offset):
-
         marker_offset = numpy.asarray(marker_offset)
 
         q = qmt.qinv(rigid_body_orientation)

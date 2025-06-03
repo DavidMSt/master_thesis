@@ -15,8 +15,6 @@
 #include "firmware.hpp"
 
 
-
-
 /* Global Firmware Instance */
 FRODO_Firmware frodo_firmware;
 

@@ -18,7 +18,6 @@ class SPI_Interface:
 
     # ------------------------------------------------------------------------------------------------------------------
     def send(self, data: bytearray):
-        # print(f'SPI: Sending {len(data)} bytes: {data}')
         if isinstance(data, list):
             data = bytearray(data)
 

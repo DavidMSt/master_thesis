@@ -776,7 +776,7 @@
   ) {
     this.tag = tag;
     this.data = data;
-    this.children = children;
+    this.objects = children;
     this.text = text;
     this.elm = elm;
     this.ns = undefined;
@@ -833,7 +833,7 @@
       // #7975
       // clone children array to avoid mutating original in case of cloning
       // a child.
-      vnode.children && vnode.children.slice(),
+      vnode.objects && vnode.objects.slice(),
       vnode.text,
       vnode.elm,
       vnode.context,
@@ -2528,7 +2528,7 @@
         var name = data.slot;
         var slot = (slots[name] || (slots[name] = []));
         if (child.tag === 'template') {
-          slot.push.apply(slot, child.children || []);
+          slot.push.apply(slot, child.objects || []);
         } else {
           slot.push(child);
         }
@@ -3008,7 +3008,7 @@
 
     this.data = data;
     this.props = props;
-    this.children = children;
+    this.objects = children;
     this.parent = parent;
     this.listeners = data.on || emptyObject;
     this.injections = resolveInject(options.inject, parent);
@@ -3153,7 +3153,7 @@
         options.propsData, // updated props
         options.listeners, // updated listeners
         vnode, // new parent vnode
-        options.children // new children
+        options.objects // new children
       );
     },
 
@@ -3284,7 +3284,7 @@
     var vnode = new VNode(
       ("vue-component-" + (Ctor.cid) + (name ? ("-" + name) : '')),
       data, undefined, undefined, undefined, context,
-      { Ctor: Ctor, propsData: propsData, listeners: listeners, tag: tag, children: children },
+      { Ctor: Ctor, propsData: propsData, listeners: listeners, tag: tag, objects: children },
       asyncFactory
     );
 
@@ -3478,9 +3478,9 @@
       ns = undefined;
       force = true;
     }
-    if (isDef(vnode.children)) {
-      for (var i = 0, l = vnode.children.length; i < l; i++) {
-        var child = vnode.children[i];
+    if (isDef(vnode.objects)) {
+      for (var i = 0, l = vnode.objects.length; i < l; i++) {
+        var child = vnode.objects[i];
         if (isDef(child.tag) && (
           isUndef(child.ns) || (isTrue(force) && child.tag !== 'svg'))) {
           applyNS(child, ns, force);
@@ -3632,7 +3632,7 @@
   ) {
     var node = createEmptyVNode();
     node.asyncFactory = factory;
-    node.asyncMeta = { data: data, context: context, children: children, tag: tag };
+    node.asyncMeta = { data: data, context: context, objects: children, tag: tag };
     return node
   }
 
@@ -5038,7 +5038,7 @@
     var vnodeComponentOptions = parentVnode.componentOptions;
     opts.propsData = vnodeComponentOptions.propsData;
     opts._parentListeners = vnodeComponentOptions.listeners;
-    opts._renderChildren = vnodeComponentOptions.children;
+    opts._renderChildren = vnodeComponentOptions.objects;
     opts._componentTag = vnodeComponentOptions.tag;
 
     if (options.render) {
@@ -5966,7 +5966,7 @@
       }
 
       var data = vnode.data;
-      var children = vnode.children;
+      var children = vnode.objects;
       var tag = vnode.tag;
       if (isDef(tag)) {
         {
@@ -6153,9 +6153,9 @@
         if (isDef(i = data.hook) && isDef(i = i.destroy)) { i(vnode); }
         for (i = 0; i < cbs.destroy.length; ++i) { cbs.destroy[i](vnode); }
       }
-      if (isDef(i = vnode.children)) {
-        for (j = 0; j < vnode.children.length; ++j) {
-          invokeDestroyHook(vnode.children[j]);
+      if (isDef(i = vnode.objects)) {
+        for (j = 0; j < vnode.objects.length; ++j) {
+          invokeDestroyHook(vnode.objects[j]);
         }
       }
     }
@@ -6347,8 +6347,8 @@
         i(oldVnode, vnode);
       }
 
-      var oldCh = oldVnode.children;
-      var ch = vnode.children;
+      var oldCh = oldVnode.objects;
+      var ch = vnode.objects;
       if (isDef(data) && isPatchable(vnode)) {
         for (i = 0; i < cbs.update.length; ++i) { cbs.update[i](oldVnode, vnode); }
         if (isDef(i = data.hook) && isDef(i = i.update)) { i(oldVnode, vnode); }
@@ -6399,7 +6399,7 @@
       var i;
       var tag = vnode.tag;
       var data = vnode.data;
-      var children = vnode.children;
+      var children = vnode.objects;
       inVPre = inVPre || (data && data.pre);
       vnode.elm = elm;
 
@@ -7660,7 +7660,7 @@
       // as these will throw away existing DOM nodes and cause removal errors
       // on subsequent patches (#3360)
       if (key === 'textContent' || key === 'innerHTML') {
-        if (vnode.children) { vnode.children.length = 0; }
+        if (vnode.objects) { vnode.objects.length = 0; }
         if (cur === oldProps[key]) { continue }
         // #6601 work around Chrome version <= 55 bug where single textNode
         // replaced by innerHTML/textContent retains its parentNode property
@@ -8725,7 +8725,7 @@
   function getRealChild (vnode) {
     var compOptions = vnode && vnode.componentOptions;
     if (compOptions && compOptions.Ctor.options.abstract) {
-      return getRealChild(getFirstComponentChild(compOptions.children))
+      return getRealChild(getFirstComponentChild(compOptions.objects))
     } else {
       return vnode
     }
@@ -8923,9 +8923,9 @@
     render: function render (h) {
       var tag = this.tag || this.$vnode.data.tag || 'span';
       var map = Object.create(null);
-      var prevChildren = this.prevChildren = this.children;
+      var prevChildren = this.prevChildren = this.objects;
       var rawChildren = this.$slots.default || [];
-      var children = this.children = [];
+      var children = this.objects = [];
       var transitionData = extractTransitionData(this);
 
       for (var i = 0; i < rawChildren.length; i++) {
@@ -9627,7 +9627,7 @@
       attrsMap: makeAttrsMap(attrs),
       rawAttrsMap: {},
       parent: parent,
-      children: []
+      objects: []
     }
   }
 
@@ -9708,14 +9708,14 @@
             var name = element.slotTarget || '"default"'
             ;(currentParent.scopedSlots || (currentParent.scopedSlots = {}))[name] = element;
           }
-          currentParent.children.push(element);
+          currentParent.objects.push(element);
           element.parent = currentParent;
         }
       }
 
       // final children cleanup
       // filter out scoped slots
-      element.children = element.children.filter(function (c) { return !(c).slotScope; });
+      element.objects = element.objects.filter(function (c) { return !(c).slotScope; });
       // remove trailing whitespace node again
       trimEndingWhitespace(element);
 
@@ -9737,11 +9737,11 @@
       if (!inPre) {
         var lastNode;
         while (
-          (lastNode = el.children[el.children.length - 1]) &&
+          (lastNode = el.objects[el.objects.length - 1]) &&
           lastNode.type === 3 &&
           lastNode.text === ' '
         ) {
-          el.children.pop();
+          el.objects.pop();
         }
       }
     }
@@ -9895,7 +9895,7 @@
         ) {
           return
         }
-        var children = currentParent.children;
+        var children = currentParent.objects;
         if (inPre || text.trim()) {
           text = isTextTag(currentParent) ? text : decodeHTMLCached(text);
         } else if (!children.length) {
@@ -9954,7 +9954,7 @@
             child.start = start;
             child.end = end;
           }
-          currentParent.children.push(child);
+          currentParent.objects.push(child);
         }
       }
     });
@@ -10104,7 +10104,7 @@
   }
 
   function processIfConditions (el, parent) {
-    var prev = findPrevElement(parent.children);
+    var prev = findPrevElement(parent.objects);
     if (prev && prev.if) {
       addIfCondition(prev, {
         exp: el.elseif,
@@ -10256,7 +10256,7 @@
           var slotContainer = slots[name$1] = createASTElement('template', [], el);
           slotContainer.slotTarget = name$1;
           slotContainer.slotTargetDynamic = dynamic$1;
-          slotContainer.children = el.children.filter(function (c) {
+          slotContainer.children = el.objects.filter(function (c) {
             if (!c.slotScope) {
               c.parent = slotContainer;
               return true
@@ -10264,7 +10264,7 @@
           });
           slotContainer.slotScope = slotBinding$1.value || emptySlotScopeToken;
           // remove children as they are returned from scopedSlots now
-          el.children = [];
+          el.objects = [];
           // mark el non-plain so data gets generated
           el.plain = false;
         }
@@ -10693,8 +10693,8 @@
       ) {
         return
       }
-      for (var i = 0, l = node.children.length; i < l; i++) {
-        var child = node.children[i];
+      for (var i = 0, l = node.objects.length; i < l; i++) {
+        var child = node.objects[i];
         markStatic$1(child);
         if (!child.static) {
           node.static = false;
@@ -10720,18 +10720,18 @@
       // For a node to qualify as a static root, it should have children that
       // are not just static text. Otherwise the cost of hoisting out will
       // outweigh the benefits and it's better off to just always render it fresh.
-      if (node.static && node.children.length && !(
-        node.children.length === 1 &&
-        node.children[0].type === 3
+      if (node.static && node.objects.length && !(
+        node.objects.length === 1 &&
+        node.objects[0].type === 3
       )) {
         node.staticRoot = true;
         return
       } else {
         node.staticRoot = false;
       }
-      if (node.children) {
-        for (var i = 0, l = node.children.length; i < l; i++) {
-          markStaticRoots(node.children[i], isInFor || !!node.for);
+      if (node.objects) {
+        for (var i = 0, l = node.objects.length; i < l; i++) {
+          markStaticRoots(node.objects[i], isInFor || !!node.for);
         }
       }
       if (node.ifConditions) {
@@ -11255,8 +11255,8 @@
   }
 
   function genInlineTemplate (el, state) {
-    var ast = el.children[0];
-    if (el.children.length !== 1 || ast.type !== 1) {
+    var ast = el.objects[0];
+    if (el.objects.length !== 1 || ast.type !== 1) {
       state.warn(
         'Inline-template components must have exactly one child element.',
         { start: el.start }
@@ -11336,7 +11336,7 @@
       if (el.tag === 'slot') {
         return true
       }
-      return el.children.some(containsSlotChild)
+      return el.objects.some(containsSlotChild)
     }
     return false
   }
@@ -11373,7 +11373,7 @@
     altGenElement,
     altGenNode
   ) {
-    var children = el.children;
+    var children = el.objects;
     if (children.length) {
       var el$1 = children[0];
       // optimize single v-for
@@ -11554,9 +11554,9 @@
           }
         }
       }
-      if (node.children) {
-        for (var i = 0; i < node.children.length; i++) {
-          checkNode(node.children[i], warn);
+      if (node.objects) {
+        for (var i = 0; i < node.objects.length; i++) {
+          checkNode(node.objects[i], warn);
         }
       }
     } else if (node.type === 2) {

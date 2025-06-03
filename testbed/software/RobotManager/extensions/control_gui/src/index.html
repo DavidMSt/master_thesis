@@ -7,19 +7,21 @@
     <title>WebGUI Layout</title>
     <link rel="stylesheet" href="./lib/styles.css"/>
     <link rel="stylesheet" href="./lib/widget-styles.css"/>
+    <link rel="stylesheet" href="./lib/terminal/terminal.css"/>
 </head>
 <body>
 <header id="headbar">
     <div id="headbar_grid"></div>
 </header>
+<div id="side_placeholder"></div>
 <nav id="robot_status_bar">
     <div id="robot_status_bar_grid"></div>
 </nav>
-<nav id="navigation_bar">
-    <div id="navigation_bar_grid"></div>
+<nav id="page_bar">
+    <div id="page_bar_grid" class="page_bar_grid"></div>
 </nav>
-<aside id="application_bar">
-    <div id="application_bar_grid"></div>
+<aside id="category_bar">
+    <div id="category_bar_grid"></div>
 </aside>
 <main id="content">
     <div id="grid" class="grid">
@@ -45,19 +47,21 @@
         const canvas = document.getElementById('mapCanvas');
 
 
-        const wsUrl = `ws://${window.location.hostname}:8099`;
+        const wsUrl = `ws://${window.location.hostname}:8100`;
         const controlGUI = new ControlGui({
+            content: "content",
             grid: "grid",
-            navigation_bar: "navigation_bar",
-            navigation_bar_grid: "navigation_bar_grid",
-            application_bar: "application_bar",
-            application_bar_grid: "application_bar_grid",
+            page_bar: "page_bar",
+            page_bar_grid: "page_bar_grid",
+            category_bar: "category_bar",
+            category_bar_grid: "category_bar_grid",
             head_bar: "headbar",
             head_bar_grid: "headbar_grid",
             terminal_container: "terminal-container",
             robot_status_bar: "robot_status_bar",
             robot_status_bar_grid: "robot_status_bar_grid",
-        }, wsUrl);
+            side_placeholder: "side_placeholder",
+        }, {}, wsUrl);
 
     });
 

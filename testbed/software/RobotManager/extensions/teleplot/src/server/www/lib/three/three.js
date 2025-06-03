@@ -3975,7 +3975,7 @@
 				}
 			}
 
-			const children = object.children;
+			const children = object.objects;
 
 			for (let i = 0, l = children.length; i < l; i++) {
 				this.expandByObject(children[i], precise);
@@ -5779,7 +5779,7 @@
 			this.name = '';
 			this.type = 'Object3D';
 			this.parent = null;
-			this.children = [];
+			this.objects = [];
 			this.up = Object3D.DefaultUp.clone();
 			const position = new Vector3();
 			const rotation = new Euler();
@@ -5986,7 +5986,7 @@
 				}
 
 				object.parent = this;
-				this.children.push(object);
+				this.objects.push(object);
 				object.dispatchEvent(_addedEvent);
 			} else {
 				console.error('THREE.Object3D.add: object not an instance of THREE.Object3D.', object);
@@ -6004,11 +6004,11 @@
 				return this;
 			}
 
-			const index = this.children.indexOf(object);
+			const index = this.objects.indexOf(object);
 
 			if (index !== -1) {
 				object.parent = null;
-				this.children.splice(index, 1);
+				this.objects.splice(index, 1);
 				object.dispatchEvent(_removedEvent);
 			}
 
@@ -6026,13 +6026,13 @@
 		}
 
 		clear() {
-			for (let i = 0; i < this.children.length; i++) {
-				const object = this.children[i];
+			for (let i = 0; i < this.objects.length; i++) {
+				const object = this.objects[i];
 				object.parent = null;
 				object.dispatchEvent(_removedEvent);
 			}
 
-			this.children.length = 0;
+			this.objects.length = 0;
 			return this;
 		}
 
@@ -6066,8 +6066,8 @@
 		getObjectByProperty(name, value) {
 			if (this[name] === value) return this;
 
-			for (let i = 0, l = this.children.length; i < l; i++) {
-				const child = this.children[i];
+			for (let i = 0, l = this.objects.length; i < l; i++) {
+				const child = this.objects[i];
 				const object = child.getObjectByProperty(name, value);
 
 				if (object !== undefined) {
@@ -6105,7 +6105,7 @@
 
 		traverse(callback) {
 			callback(this);
-			const children = this.children;
+			const children = this.objects;
 
 			for (let i = 0, l = children.length; i < l; i++) {
 				children[i].traverse(callback);
@@ -6115,7 +6115,7 @@
 		traverseVisible(callback) {
 			if (this.visible === false) return;
 			callback(this);
-			const children = this.children;
+			const children = this.objects;
 
 			for (let i = 0, l = children.length; i < l; i++) {
 				children[i].traverseVisible(callback);
@@ -6151,7 +6151,7 @@
 			} // update children
 
 
-			const children = this.children;
+			const children = this.objects;
 
 			for (let i = 0, l = children.length; i < l; i++) {
 				const child = children[i];
@@ -6179,7 +6179,7 @@
 
 
 			if (updateChildren === true) {
-				const children = this.children;
+				const children = this.objects;
 
 				for (let i = 0, l = children.length; i < l; i++) {
 					const child = children[i];
@@ -6303,11 +6303,11 @@
 			} //
 
 
-			if (this.children.length > 0) {
-				object.children = [];
+			if (this.objects.length > 0) {
+				object.objects = [];
 
-				for (let i = 0; i < this.children.length; i++) {
-					object.children.push(this.children[i].toJSON(meta).object);
+				for (let i = 0; i < this.objects.length; i++) {
+					object.objects.push(this.objects[i].toJSON(meta).object);
 				}
 			} //
 
@@ -6383,8 +6383,8 @@
 			this.userData = JSON.parse(JSON.stringify(source.userData));
 
 			if (recursive === true) {
-				for (let i = 0; i < source.children.length; i++) {
-					const child = source.children[i];
+				for (let i = 0; i < source.objects.length; i++) {
+					const child = source.objects[i];
 					this.add(child.clone());
 				}
 			}
@@ -9036,7 +9036,7 @@
 		update(renderer, scene) {
 			if (this.parent === null) this.updateMatrixWorld();
 			const renderTarget = this.renderTarget;
-			const [cameraPX, cameraNX, cameraPY, cameraNY, cameraPZ, cameraNZ] = this.children;
+			const [cameraPX, cameraNX, cameraPY, cameraNY, cameraPZ, cameraNZ] = this.objects;
 			const currentRenderTarget = renderer.getRenderTarget();
 			const currentToneMapping = renderer.toneMapping;
 			const currentXrEnabled = renderer.xr.enabled;
@@ -15639,7 +15639,7 @@
 				}
 			}
 
-			const children = object.children;
+			const children = object.objects;
 
 			for (let i = 0, l = children.length; i < l; i++) {
 				renderObject(children[i], camera, shadowCamera, light, type);
@@ -18596,7 +18596,7 @@
 
 				camera.matrix.copy(cameraVR.matrix);
 				camera.matrix.decompose(camera.position, camera.quaternion, camera.scale);
-				const children = camera.children;
+				const children = camera.objects;
 
 				for (let i = 0, l = children.length; i < l; i++) {
 					children[i].updateMatrixWorld(true);
@@ -20211,7 +20211,7 @@
 				}
 			}
 
-			const children = object.children;
+			const children = object.objects;
 
 			for (let i = 0, l = children.length; i < l; i++) {
 				projectObject(children[i], camera, groupOrder, sortObjects);
@@ -30744,8 +30744,8 @@
 			if (data.userData !== undefined) object.userData = data.userData;
 			if (data.layers !== undefined) object.layers.mask = data.layers;
 
-			if (data.children !== undefined) {
-				const children = data.children;
+			if (data.objects !== undefined) {
+				const children = data.objects;
 
 				for (let i = 0; i < children.length; i++) {
 					object.add(this.parseObject(children[i], geometries, materials, textures, animations));
@@ -31940,7 +31940,7 @@
 			} // search into node subtree.
 
 
-			if (root.children) {
+			if (root.objects) {
 				const searchNodeSubtree = function (children) {
 					for (let i = 0; i < children.length; i++) {
 						const childNode = children[i];
@@ -31949,14 +31949,14 @@
 							return childNode;
 						}
 
-						const result = searchNodeSubtree(childNode.children);
+						const result = searchNodeSubtree(childNode.objects);
 						if (result) return result;
 					}
 
 					return null;
 				};
 
-				const subTreeNode = searchNodeSubtree(root.children);
+				const subTreeNode = searchNodeSubtree(root.objects);
 
 				if (subTreeNode) {
 					return subTreeNode;
@@ -33789,7 +33789,7 @@
 		}
 
 		if (recursive === true) {
-			const children = object.children;
+			const children = object.objects;
 
 			for (let i = 0, l = children.length; i < l; i++) {
 				intersectObject(children[i], raycaster, intersects, true);
@@ -34254,8 +34254,8 @@
 			boneList.push(object);
 		}
 
-		for (let i = 0; i < object.children.length; i++) {
-			boneList.push.apply(boneList, getBoneList(object.children[i]));
+		for (let i = 0; i < object.objects.length; i++) {
+			boneList.push.apply(boneList, getBoneList(object.objects[i]));
 		}
 
 		return boneList;
@@ -34348,12 +34348,12 @@
 		}
 
 		dispose() {
-			this.children[0].geometry.dispose();
-			this.children[0].material.dispose();
+			this.objects[0].geometry.dispose();
+			this.objects[0].material.dispose();
 		}
 
 		update() {
-			const mesh = this.children[0];
+			const mesh = this.objects[0];
 
 			if (this.color !== undefined) {
 				this.material.color.set(this.color);

@@ -17,8 +17,11 @@ from core.utils.logging_utils import Logger
 from core.utils.csv_utils import CSVLogger
 from core.utils.sound.sound import speak, playSound
 
-INPUT_FILE_PATH = "./applications/FRODO/experiments/input/"
-OUTPUT_FILE_PATH = "./applications/FRODO/experiments/output/"
+# INPUT_FILE_PATH = "./applications/FRODO/experiments/input/"
+INPUT_FILE_PATH = "/Users/lehmann/Seafile/work/projects/testbed/bilbolab/testbed/software/RobotManager/applications/FRODO/experiments/input/"
+OUTPUT_FILE_PATH = "/Users/lehmann/Seafile/work/projects/testbed/bilbolab/testbed/software/RobotManager/applications/FRODO/experiments/output/"
+
+# OUTPUT_FILE_PATH = "./applications/FRODO/experiments/output/"
 
 POSITION_TOLERANCE = 0.10   #[m]
 PSI_TOLERANCE = 0.17    #[rad]; ~10°
@@ -452,7 +455,7 @@ class FRODO_ExperimentHandler:
 
     def startExperiment(self, file_name : str):
         self.experiment_agents = []
-        with open(INPUT_FILE_PATH + file_name, 'r') as file:
+        with open( INPUT_FILE_PATH + file_name, 'r') as file:
             self.config = json.load(file)
         if self.checkConsistency() and self.checkRequiredPositions():
             self.loadMovements()

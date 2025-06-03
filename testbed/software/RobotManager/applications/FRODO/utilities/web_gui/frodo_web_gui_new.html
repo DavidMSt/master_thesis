@@ -479,7 +479,7 @@
         <div v-if="video.placeholder" class="video-placeholder">
           {{ video.title }}
         </div>
-        <iframe v-else :src="'http://' + video.address + ':' + video.port + (video.refreshKey ? '?_t=' + video.refreshKey : '')" :key="video.refreshKey" frameborder="0"></iframe>
+        <iframe v-else :src="'http://' + video.address + ':' + video.port + (video.refreshKey ? '?_t=' + video.refreshKey : '')" :key="video.refreshKey" frameborder="0" allow="camera; microphone; autoplay"></iframe>
       </div>
     </div>
 
@@ -487,7 +487,7 @@
     <div class="enlarged-video-overlay" v-if="enlargedVideoKey !== null" @click.self="closeEnlargedVideo">
       <div class="enlarged-video-container">
         <button class="close-enlarged-button" @click="closeEnlargedVideo">X</button>
-        <iframe :src="'http://' + videos[enlargedVideoKey].address + ':' + videos[enlargedVideoKey].port + (videos[enlargedVideoKey].refreshKey ? '?_t=' + videos[enlargedVideoKey].refreshKey : '')"></iframe>
+        <iframe :src="'http://' + videos[enlargedVideoKey].address + ':' + videos[enlargedVideoKey].port + (videos[enlargedVideoKey].refreshKey ? '?_t=' + videos[enlargedVideoKey].refreshKey : '')" allow="camera; microphone; autoplay"></iframe>
       </div>
     </div>
 

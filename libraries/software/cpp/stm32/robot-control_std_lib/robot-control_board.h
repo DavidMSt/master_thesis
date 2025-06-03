@@ -8,8 +8,8 @@
 #ifndef ROBOT_CONTROL_BOARD_H_
 #define ROBOT_CONTROL_BOARD_H_
 
-//#define BOARD_REV_3
-#define BOARD_REV_4
+#define BOARD_REV_3
+//#define BOARD_REV_4
 
 
 

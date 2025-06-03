@@ -67,9 +67,6 @@ class BILBO_SPI_Interface:
     def close(self, *args, **kwargs):
         ...
 
-    # def send(self, data: (bytes, bytearray)):
-    #     self.interface.send(data)
-
     def sendTrajectoryData(self, trajectory_length, trajectory_data_bytes: (bytes, bytearray)):
         with self.lock:
             self._sendCommand(BILBO_SPI_Command_Type.SEND_TRAJECTORY, trajectory_length)
@@ -106,7 +103,6 @@ class BILBO_SPI_Interface:
             return
 
         samples, latest_sample = self._readSamples()
-
         for callback in self.callbacks.rx_samples:
             callback(samples)
 
@@ -132,5 +128,5 @@ class BILBO_SPI_Interface:
             samples.append(sample)
 
         latest_sample = from_dict(BILBO_LL_Sample, samples[-1])
-
         return samples, latest_sample
+

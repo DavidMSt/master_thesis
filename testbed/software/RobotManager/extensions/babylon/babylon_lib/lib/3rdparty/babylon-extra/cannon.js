@@ -10394,7 +10394,7 @@ function bfs(root,visitFunc,bds,eqs){
         var node = queue.pop();
         // Loop over unvisited child nodes
         var child;
-        while((child = getUnvisitedNode(node.children))) {
+        while((child = getUnvisitedNode(node.objects))) {
             child.visited = true;
             visitFunc(child,bds,eqs);
             queue.push(child);
@@ -10414,7 +10414,7 @@ function visitFunc(node,bds,eqs){
 }
 
 SplitSolver.prototype.createNode = function(){
-    return { body:null, children:[], eqs:[], visited:false };
+    return { body:null, objects:[], eqs:[], visited:false };
 };
 
 /**
@@ -10445,7 +10445,7 @@ SplitSolver.prototype.solve = function(dt,world){
     for(var i=0; i!==Nbodies; i++){
         var node = nodes[i];
         node.body = bodies[i];
-        node.children.length = 0;
+        node.objects.length = 0;
         node.eqs.length = 0;
         node.visited = false;
     }
@@ -10455,9 +10455,9 @@ SplitSolver.prototype.solve = function(dt,world){
             j=bodies.indexOf(eq.bj),
             ni=nodes[i],
             nj=nodes[j];
-        ni.children.push(nj);
+        ni.objects.push(nj);
         ni.eqs.push(eq);
-        nj.children.push(ni);
+        nj.objects.push(ni);
         nj.eqs.push(eq);
     }
 
@@ -10617,7 +10617,7 @@ function OctreeNode(options){
      * Children to this node
      * @property {Array} children
      */
-    this.children = [];
+    this.objects = [];
 }
 
 /**
@@ -10642,7 +10642,7 @@ function Octree(aabb, options){
 Octree.prototype = new OctreeNode();
 
 OctreeNode.prototype.reset = function(aabb, options){
-    this.children.length = this.data.length = 0;
+    this.objects.length = this.data.length = 0;
 };
 
 /**
@@ -10661,7 +10661,7 @@ OctreeNode.prototype.insert = function(aabb, elementData, level){
         return false; // object cannot be added
     }
 
-    var children = this.children;
+    var children = this.objects;
 
     if(level < (this.maxDepth || this.root.maxDepth)){
         // Subdivide if there are no children yet
@@ -10701,7 +10701,7 @@ OctreeNode.prototype.subdivide = function() {
     var l = aabb.lowerBound;
     var u = aabb.upperBound;
 
-    var children = this.children;
+    var children = this.objects;
 
     children.push(
         new OctreeNode({ aabb: new AABB({ lowerBound: new Vec3(0,0,0) }) }),
@@ -10759,7 +10759,7 @@ OctreeNode.prototype.aabbQuery = function(aabb, result) {
 
     // Add child data
     // @todo unwrap recursion into a queue / loop, that's faster in JS
-    var children = this.children;
+    var children = this.objects;
 
 
     // for (var i = 0, N = this.children.length; i !== N; i++) {
@@ -10772,7 +10772,7 @@ OctreeNode.prototype.aabbQuery = function(aabb, result) {
         if (node.aabb.overlaps(aabb)){
             Array.prototype.push.apply(result, node.data);
         }
-        Array.prototype.push.apply(queue, node.children);
+        Array.prototype.push.apply(queue, node.objects);
     }
 
     return result;
@@ -10806,12 +10806,12 @@ OctreeNode.prototype.removeEmptyNodes = function() {
     var queue = [this];
     while (queue.length) {
         var node = queue.pop();
-        for (var i = node.children.length - 1; i >= 0; i--) {
-            if(!node.children[i].data.length){
-                node.children.splice(i, 1);
+        for (var i = node.objects.length - 1; i >= 0; i--) {
+            if(!node.objects[i].data.length){
+                node.objects.splice(i, 1);
             }
         }
-        Array.prototype.push.apply(queue, node.children);
+        Array.prototype.push.apply(queue, node.objects);
     }
 };
 

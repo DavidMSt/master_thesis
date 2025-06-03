@@ -1,0 +1,230 @@
+{
+    "id": "mov_vis_approach_static",
+    "name": "Movement Visualization Approach Static",
+    "description": "Experiment for visualization of the movement possibilities, where robots drive to static from different sides",
+    "date": "2025-05-28T10:53:51",
+    "requirements": {
+        "tracked_assets": [
+            "frodo1",
+            "frodo2",
+            "frodo3",
+            "static1"
+        ],
+        "agents": {
+            "frodo1": {
+                "position": [
+                    0.8,
+                    0
+                ],
+                "psi": -3.141
+            },
+            "frodo2": {
+                "position": [
+                    -0.25,
+                    0.8
+                ],
+                "psi": -1.047
+            },
+            "frodo3": {
+                "position": [
+                    -0.25,
+                    -0.8
+                ],
+                "psi": 1.047
+            }
+        },
+        "statics": {
+            "static1": {
+                "position": [
+                    0,
+                    0
+                ]
+            }
+        }
+    },
+    "algorithm": {
+        "parameters": {
+            "define1": 42,
+            "define2": 66
+        },
+        "agents": {
+            "frodo1": {
+                "position_prior": {
+                    "pos": [
+                        0.0,
+                        0.0
+                    ],
+                    "uncertainty": 100
+                },
+                "orientation_prior": {
+                    "psi": 0.0,
+                    "uncertainty": 100
+                }
+            },
+            "frodo2": {
+                "position_prior": {
+                    "pos": [
+                        0.0,
+                        0.0
+                    ],
+                    "uncertainty": 100
+                },
+                "orientation_prior": {
+                    "psi": 0.0,
+                    "uncertainty": 100
+                }
+            },
+            "frodo3": {
+                "position_prior": {
+                    "pos": [
+                        0.0,
+                        0.0
+                    ],
+                    "uncertainty": 100
+                },
+                "orientation_prior": {
+                    "psi": 0.0,
+                    "uncertainty": 100
+                }
+            }
+        },
+        "statics": {
+            "static1": {
+                "pos": [
+                    -1.2,
+                    -1.2
+                ],
+                "uncertainty": 0.1
+            }
+        }
+    },
+    "movement": {
+        "possible_modes": [
+            "managed",
+            "external"
+        ],
+        "frodo1": {
+            "mode": "managed",
+            "movements": {
+                "0": {
+                    "description": "move",
+                    "radius_mm": 250,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "1": {
+                    "description": "move",
+                    "radius_mm": 125,
+                    "psi": 1.5705,
+                    "time_s": 1.5
+                },
+                "2": {
+                    "description": "move",
+                    "radius_mm": 325,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "3": {
+                    "description": "move",
+                    "radius_mm": 125,
+                    "psi": -1.5705,
+                    "time_s": 1.5
+                },
+                "4": {
+                    "description": "move",
+                    "radius_mm": 375,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "5": {
+                    "description": "move",
+                    "radius_mm": 0,
+                    "psi": 2.094,
+                    "time_s": 3
+                }
+            }
+        },
+        "frodo2": {
+            "mode": "managed",
+            "movements": {
+                "0": {
+                    "description": "move",
+                    "radius_mm": 250,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "1": {
+                    "description": "move",
+                    "radius_mm": 125,
+                    "psi": 1.5705,
+                    "time_s": 1.5
+                },
+                "2": {
+                    "description": "move",
+                    "radius_mm": 325,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "3": {
+                    "description": "move",
+                    "radius_mm": 125,
+                    "psi": -1.5705,
+                    "time_s": 1.5
+                },
+                "4": {
+                    "description": "move",
+                    "radius_mm": 375,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "5": {
+                    "description": "move",
+                    "radius_mm": 0,
+                    "psi": 2.094,
+                    "time_s": 3
+                }
+            }
+        },
+        "frodo3": {
+            "mode": "managed",
+            "movements": {
+                "0": {
+                    "description": "move",
+                    "radius_mm": 250,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "1": {
+                    "description": "move",
+                    "radius_mm": 125,
+                    "psi": 1.5705,
+                    "time_s": 1.5
+                },
+                "2": {
+                    "description": "move",
+                    "radius_mm": 325,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "3": {
+                    "description": "move",
+                    "radius_mm": 125,
+                    "psi": -1.5705,
+                    "time_s": 1.5
+                },
+                "4": {
+                    "description": "move",
+                    "radius_mm": 375,
+                    "psi": 0,
+                    "time_s": 2.5
+                },
+                "5": {
+                    "description": "move",
+                    "radius_mm": 0,
+                    "psi": 2.094,
+                    "time_s": 3
+                }
+            }
+        }
+    }
+}

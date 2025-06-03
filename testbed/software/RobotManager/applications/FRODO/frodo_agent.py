@@ -3,14 +3,19 @@ import time
 import math
 
 from applications.FRODO.utilities.uncertainty.uncertainty import uncertainty_distance, uncertainty_angle
+from applications.FRODO.utilities.web_gui.FRODO_Web_Interface import VisionAgent, Circle
 from robots.frodo.frodo import Frodo
 from core.utils.teleplot import sendValue
+from robots.frodo.frodo_definitions import frodo_colors
 from core.utils.time import PrecisionTimer
 
 ''''''
+
+
 @dataclasses.dataclass
 class FRODO_Sample:
     ...
+
 
 @dataclasses.dataclass
 class FRODO_State:
@@ -29,6 +34,7 @@ class FRODO_Aruco_Measurements:
     psi: float = 0.0
     psi_uncertainty: float = 0.0
 
+
 @dataclasses.dataclass
 class FRODO_Measurement_Data:
     id: str = "none"
@@ -42,7 +48,6 @@ class FRODO_Measurement_Data:
     aruco_measurements: list[FRODO_Aruco_Measurements] = dataclasses.field(default_factory=list)
 
 
-
 # ======================================================================================================================
 class FRODO_Agent:
     id: str
@@ -51,10 +56,12 @@ class FRODO_Agent:
     state_true: FRODO_State
     measurements: FRODO_Measurement_Data
 
+    estimated_plot_item: VisionAgent
+    estimated_plot_covariance: Circle
+
     robot: Frodo
 
     _last_update_time: float = 0
-
 
     def __init__(self, id: str, robot: Frodo):
         self.id = id
@@ -64,6 +71,20 @@ class FRODO_Agent:
         self.measurements = FRODO_Measurement_Data()
         self._last_update_time = 0
 
+        self.estimated_plot_item = VisionAgent(f'{id}_est',
+                                               vision_fov=0,
+                                               vision_radius=0,
+                                               position=[0, 0],
+                                               psi=0,
+                                               color=frodo_colors[self.id])
+
+        self.estimated_plot_covariance = Circle(
+            f'{id}_cov',
+            mid=[0, 0],
+            diameter=0,
+            fill=frodo_colors[self.id],
+            alpha=0.2
+        )
 
         self.robot.callbacks.stream.register(self._robot_stream_callback)
         # Buffer to hold high-frequency state measurements: each element is (timestamp, FRODO_State)
@@ -83,8 +104,10 @@ class FRODO_Agent:
 
             self.measurements.aruco_measurements = []
             for measurement in data['sensors']['aruco_measurements']:
-                tvec_unc = uncertainty_distance(float(measurement['translation_vec'][0]),float(measurement['translation_vec'][1]))
-                psi_unc = uncertainty_angle(float(measurement['translation_vec'][0]),float(measurement['translation_vec'][1]))
+                tvec_unc = uncertainty_distance(float(measurement['translation_vec'][0]),
+                                                float(measurement['translation_vec'][1]))
+                psi_unc = uncertainty_angle(float(measurement['translation_vec'][0]),
+                                            float(measurement['translation_vec'][1]))
                 tmp = FRODO_Aruco_Measurements(marker_id=measurement['id'],
                                                translation_vec=measurement['translation_vec'],
                                                tvec_uncertainty=tvec_unc,

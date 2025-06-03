@@ -337,6 +337,7 @@ class BILBO_Control:
             turn (int or float): Normalized turn input.
             force (bool): If True, force the low-level command update immediately.
         """
+
         assert isinstance(forward, (int, float))
         assert isinstance(turn, (int, float))
 
@@ -903,7 +904,15 @@ class BILBO_Control:
             sample (BILBO_LL_Sample): The received low-level control sample.
         """
         # Update low-level status from sample and check for errors
-        status_ll = BILBO_Control_Status_LL(sample.control.status)
+        try:
+            status_ll = BILBO_Control_Status_LL(sample.control.status)
+        except ValueError:
+            error_message = f"Received invalid status: {sample.control.status}. Possible mismatch of" \
+                            f"lowlevel firmware and python module."
+            logger.error(error_message)
+            error_handler(severity='error',message=error_message)
+            return
+
         if status_ll is not self.status_ll:
             if status_ll == BILBO_Control_Status_LL.ERROR:
                 logger.error("Error in the LL Control Module")

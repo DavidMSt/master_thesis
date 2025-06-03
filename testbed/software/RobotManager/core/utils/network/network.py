@@ -91,6 +91,7 @@ def getAllPrivateIPs():
     }
     try:
         hostname = socket.gethostname()
+        print(f"Retrieving private IP addresses from {hostname}...")
         if '.' not in hostname:
             hostname = f"{hostname}.local"
 
@@ -151,7 +152,7 @@ def chooseIpInteractive(ip_data):
         except ValueError:
             print("Invalid input. Please enter a number.")
 
-
+# ----------------------------------------------------------------------------------------------------------------------
 def getHostIP():
     """
     Retrieves a valid host IP address by using getAllPrivateIPs().

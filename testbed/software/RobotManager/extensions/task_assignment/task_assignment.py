@@ -3,8 +3,7 @@ import numpy as np
 from extensions.simulation.src.core.environment import BASE_ENVIRONMENT_ACTIONS, Object
 from extensions.simulation.examples.frodo.example_frodo import FrodoEnvironment, FRODO_TestAgent
 from enum import Enum, auto
-
-
+import extensions.simulation.src.core as core
 
 
 # TODO: Create individual files for the classes and functions
@@ -22,19 +21,11 @@ class TaskAssignmentAgent:
         return self.robot.getPosition
     
     @position.setter
-    def set_position(self, pos: tuple[float, float]):
+    def position(self, pos: tuple[float, float]):
         self.robot.setPosition = pos
 
-    def task_cost(self, task_location: tuple[float, float]) -> np.floating:
-        """
-        Compute the cost of assigning this task to the agent using the agent's cost function.
-
-        Args:
-            task_location (tuple[float, float]): The (x, y) location of the task.
-
-        Returns:
-            float: The computed cost.
-        """
+    def calc_task_cost(self, task_location: tuple[float, float]) -> np.floating:
+         
         return self.cost_function(task_location=task_location)
     
     def euclidean_distance_cost(self, task_location):
@@ -42,10 +33,22 @@ class TaskAssignmentAgent:
         agent_pos = self.position
         return np.linalg.norm(np.array(agent_pos) - np.array(task_location))
 
-# task.py
-class Task(Object): # TODO: find appropiate base class
-    def __init__(self, id, location):
+
+# TODO: hat Dustin hier collision momentan rausgenommen? dort wird scioi_py_core.objects.Object genutzt
+class Task(Object): # TODO: Is this the appropiate base class? Do i manually have to make this non-collidable?
+    def __init__(self, id, position: tuple[float, float],space= core.spaces.Space2D()):
+        self.space = space # quick fix 
+        super().__init__(object_id=id, space = space)  # No specific space needed for tasks
+        self.position = position
         self.assigned = False
+
+    @property
+    def position(self):
+        return self.configuration
+    
+    @position.setter
+    def position(self, pos: tuple[float, float]):
+        self.configuration = pos
 
 class AssignmentMethod(Enum):
     HUNGARIAN = auto()  # renamed from HUNGARIAN
@@ -59,10 +62,8 @@ class AssignmentManager:
     It provides methods for centralized and decentralized task assignment using various algorithms.
 
     """
-    def __init__(self):
-        ...
 
-    def assign_tasks(self, agents, tasks, method: AssignmentMethod):
+    def assign_tasks(self, agents: list[TaskAssignmentAgent], tasks: list[Task], method: AssignmentMethod):
         if method == AssignmentMethod.HUNGARIAN:
             return self.centralized_hungarian(agents, tasks)
         elif method == AssignmentMethod.RANDOM:
@@ -77,12 +78,15 @@ class AssignmentManager:
     @staticmethod
     def centralized_hungarian(agents, tasks):
         ...
+
     @staticmethod
     def random_assignment(agents, tasks):
         ...
+
     @staticmethod   
     def decentralized_cbba(agents, tasks):
         ...
+
     @staticmethod
     def gnn_based_assignment(agents, tasks):
         ...
@@ -102,12 +106,12 @@ class TaskEnvironment(FrodoEnvironment):
                 x = np.random.uniform(0, self.x_lim)
                 y = np.random.uniform(0, self.y_lim)
                 new_agent = TaskAssignmentAgent(robot_interface=FRODO_TestAgent, Ts=self.Ts)
-                new_agent.set_position = (x, y)
+                new_agent.position = (x, y)
                 self.addObject(new_agent.robot)
         else:
             for i, pos in enumerate(positions):
                 new_agent = TaskAssignmentAgent(robot_interface=FRODO_TestAgent, Ts=self.Ts)
-                new_agent.set_position = pos
+                new_agent.position = pos
                 self.addObject(new_agent.robot)
 
     def spawn_tasks(self, n: int, positions:list[tuple[float, float]] | None = None):
@@ -123,6 +127,12 @@ class TaskEnvironment(FrodoEnvironment):
                 new_task = Task(id=f'task_{i}', location=pos)
                 self.addObject(new_task)
 
+    def get_agents(self):
+        """_summary_
+        Get all agents in the environment
+        """
+        return self.getObjectsByID(id='FRODO', regex=True)
+
     def create_groundtruth_samples(self):
         """_summary_
         Create ground truth samples that can be used for training the GNN
@@ -131,7 +141,7 @@ class TaskEnvironment(FrodoEnvironment):
 
 def main():
     env = TaskEnvironment(x_lim= 3.0, y_lim=3.0, Ts=0.1, run_mode='rt') # create the environment for the agents
-    env.spawn_agents(n=3)
+    env.spawn_agents(n=5)
     env.spawn_tasks(n=5)
     print(env.getObjectsByID(id='FRODO', regex=True))  # get the agent with the ID 'frodo1v'
     # print(env.getSample())

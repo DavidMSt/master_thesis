@@ -4,57 +4,16 @@ from extensions.simulation.src.core.environment import BASE_ENVIRONMENT_ACTIONS,
 from extensions.simulation.examples.frodo.example_frodo import FrodoEnvironment, FRODO_TestAgent
 from enum import Enum, auto
 import extensions.simulation.src.core as core
+from task_objects import Task, TaskAssignmentAgent
+from numpy.typing import NDArray
 
 
 # TODO: Create individual files for the classes and functions
-
-# agent.py
-class TaskAssignmentAgent:
-    def __init__(self,robot_interface, Ts, id = None):
-        self.robot = robot_interface(agent_id = "frodo1v", Ts=Ts) # make the robot interface modular to be able to switch between different robots
-        self.id = self.robot.agent_id
-        self.assigned_tasks = []
-        self.cost_function = self.euclidean_distance_cost # set the cost function
-
-    @property
-    def position(self):
-        return self.robot.getPosition
-    
-    @position.setter
-    def position(self, pos: tuple[float, float]):
-        self.robot.setPosition = pos
-
-    def calc_task_cost(self, task_location: tuple[float, float]) -> np.floating:
-         
-        return self.cost_function(task_location=task_location)
-    
-    def euclidean_distance_cost(self, task_location):
-        # calculate the euclidean distance to the task location
-        agent_pos = self.position
-        return np.linalg.norm(np.array(agent_pos) - np.array(task_location))
-
-
-# TODO: hat Dustin hier collision momentan rausgenommen? dort wird scioi_py_core.objects.Object genutzt
-class Task(Object): # TODO: Is this the appropiate base class? Do i manually have to make this non-collidable?
-    def __init__(self, id, position: tuple[float, float],space= core.spaces.Space2D()):
-        self.space = space # quick fix 
-        super().__init__(object_id=id, space = space)  # No specific space needed for tasks
-        self.position = position
-        self.assigned = False
-
-    @property
-    def position(self):
-        return self.configuration
-    
-    @position.setter
-    def position(self, pos: tuple[float, float]):
-        self.configuration = pos
-
 class AssignmentMethod(Enum):
-    HUNGARIAN = auto()  # renamed from HUNGARIAN
-    RANDOM = auto()     # renamed from RANDOM
-    CBBA = auto()      # renamed from CBBA
-    GNN = auto()       # renamed from GNN
+    HUNGARIAN = auto()  
+    RANDOM = auto()     
+    CBBA = auto()      
+    GNN = auto()       
 
 class AssignmentManager:
     """
@@ -62,8 +21,13 @@ class AssignmentManager:
     It provides methods for centralized and decentralized task assignment using various algorithms.
 
     """
+    def __init__(self):
+        self.assignment_matrix: NDArray[np.bool] | None = None
+        self.cost_matrix: NDArray[np.float64] | None = None
 
-    def assign_tasks(self, agents: list[TaskAssignmentAgent], tasks: list[Task], method: AssignmentMethod):
+    def create_assignment(self, agents: list[TaskAssignmentAgent], tasks: list[Task], method: AssignmentMethod):
+        
+        
         if method == AssignmentMethod.HUNGARIAN:
             return self.centralized_hungarian(agents, tasks)
         elif method == AssignmentMethod.RANDOM:
@@ -74,6 +38,15 @@ class AssignmentManager:
             return self.gnn_based_assignment(agents, tasks)
         else:
             raise NotImplementedError(f"Unknown assignment method: {method}")
+
+    def extract_local_positions(self, objects: list[TaskAssignmentAgent | list[Task]]) -> list[tuple[float, float]]:
+        """
+        Extracts the local positions of agents or tasks from a list of objects.
+        """
+        positions = []
+        for obj in objects:
+            positions.append(obj.position)
+        return positions
 
     @staticmethod
     def centralized_hungarian(agents, tasks):
@@ -89,6 +62,10 @@ class AssignmentManager:
 
     @staticmethod
     def gnn_based_assignment(agents, tasks):
+        ...
+
+    def send_assignment(self, agent: TaskAssignmentAgent, task: Task):
+        # Give agent centralized computed assignment
         ...
 
 # environment.py
@@ -120,18 +97,36 @@ class TaskEnvironment(FrodoEnvironment):
             for task in range(n):
                 x = np.random.uniform(0, self.x_lim)
                 y = np.random.uniform(0, self.y_lim)
-                new_task = Task(id=f'task_{task}', location=(x, y))
+                new_task = Task(id=f'task_{task}', position=(x, y))
                 self.addObject(new_task)
+                print(f"Spawned task {new_task.id} at position {new_task.position}")
         else:
+            # spawn tasks at specified positions
+            if len(positions) != n:
+                raise ValueError("Number of positions don't equal number of tasks.")
             for i, pos in enumerate(positions):
-                new_task = Task(id=f'task_{i}', location=pos)
+                new_task = Task(id=f'task_{i}', position=pos)
                 self.addObject(new_task)
 
-    def get_agents(self):
-        """_summary_
-        Get all agents in the environment
-        """
-        return self.getObjectsByID(id='FRODO', regex=True)
+    def get_assignment_agents(self) -> list:
+        agents = self.getObjectsByID(id="FRODO", regex=True)
+        task_agents = [a for a in agents if getattr(a, 'is_task_agent', False)]
+
+        return task_agents if task_agents else []
+
+
+    def get_assignment_tasks(self) -> list:
+        tasks = self.getObjectsByID(id = "Task", regex=True)
+        task_assignable = [a for a in tasks if getattr(a, 'is_assignable', False)]
+
+        return task_assignable if task_assignable else []
+
+    def create_assignemnts(self, method: AssignmentMethod = AssignmentMethod.HUNGARIAN):
+        self.assingment_manager.create_assignment(
+            agents=self.get_assignment_agents(),
+            tasks=self.get_assignment_tasks(),
+            method=method
+        )
 
     def create_groundtruth_samples(self):
         """_summary_
@@ -141,9 +136,12 @@ class TaskEnvironment(FrodoEnvironment):
 
 def main():
     env = TaskEnvironment(x_lim= 3.0, y_lim=3.0, Ts=0.1, run_mode='rt') # create the environment for the agents
-    env.spawn_agents(n=5)
+    env.spawn_agents(n=3)
     env.spawn_tasks(n=5)
-    print(env.getObjectsByID(id='FRODO', regex=True))  # get the agent with the ID 'frodo1v'
+    # print(env.get_assignment_agents())
+    print(env.get_assignment_tasks())
+    #print(env.getObjectsByID(id='FRODO', regex=True))  # get the agent with the ID 'frodo1v'
+    
     # print(env.getSample())
 
     # env.init()

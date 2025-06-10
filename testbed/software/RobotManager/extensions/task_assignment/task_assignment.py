@@ -16,52 +16,50 @@ class AssignmentMethod(Enum):
     GNN = auto()       
 
 class AssignmentManager:
-    """
-    _summary_ class to manage task assignments for agents in a task environment.
-    It provides methods for centralized and decentralized task assignment using various algorithms.
-
-    """
+    
     def __init__(self):
         self.assignment_matrix: NDArray[np.bool] | None = None
         self.cost_matrix: NDArray[np.float64] | None = None
 
     def create_assignment(self, agents: list[TaskAssignmentAgent], tasks: list[Task], method: AssignmentMethod):
         
+        # Validate that agents and tasks are non-empty
+        if not agents:
+            raise ValueError("The agents list is empty. At least one agent is required for task assignment.")
+        if not tasks:
+            raise ValueError("The tasks list is empty. At least one task is required for assignment.")
         
-        if method == AssignmentMethod.HUNGARIAN:
-            return self.centralized_hungarian(agents, tasks)
-        elif method == AssignmentMethod.RANDOM:
-            return self.random_assignment(agents, tasks)
-        elif method == AssignmentMethod.CBBA:
-            return self.decentralized_cbba(agents, tasks)
-        elif method == AssignmentMethod.GNN:
-            return self.gnn_based_assignment(agents, tasks)
-        else:
-            raise NotImplementedError(f"Unknown assignment method: {method}")
+    
+        for agent in agents:
+            agent.add_tasks(tasks) # add available tasks to agents
+            agent.compute_cost_vector() # compute cost vector for all tasks
 
-    def extract_local_positions(self, objects: list[TaskAssignmentAgent | list[Task]]) -> list[tuple[float, float]]:
-        """
-        Extracts the local positions of agents or tasks from a list of objects.
-        """
-        positions = []
-        for obj in objects:
-            positions.append(obj.position)
-        return positions
+        # # Select the assignment method
+        # if method == AssignmentMethod.HUNGARIAN:
+        #     return self.centralized_hungarian(agents)
+        # elif method == AssignmentMethod.RANDOM:
+        #     return self.random_assignment(agents)
+        # elif method == AssignmentMethod.CBBA:
+        #     return self.decentralized_cbba(agents)
+        # elif method == AssignmentMethod.GNN:
+        #     return self.gnn_based_assignment(agents)
+        # else:
+        #     raise NotImplementedError(f"Unknown assignment method: {method}. Available methods are: {[m.name for m in AssignmentMethod]}")
 
     @staticmethod
-    def centralized_hungarian(agents, tasks):
+    def centralized_hungarian(agents):
         ...
 
     @staticmethod
-    def random_assignment(agents, tasks):
+    def random_assignment(agents):
         ...
 
     @staticmethod   
-    def decentralized_cbba(agents, tasks):
+    def decentralized_cbba(agents):
         ...
 
     @staticmethod
-    def gnn_based_assignment(agents, tasks):
+    def gnn_based_assignment(agents):
         ...
 
     def send_assignment(self, agent: TaskAssignmentAgent, task: Task):
@@ -121,7 +119,7 @@ class TaskEnvironment(FrodoEnvironment):
 
         return task_assignable if task_assignable else []
 
-    def create_assignemnts(self, method: AssignmentMethod = AssignmentMethod.HUNGARIAN):
+    def create_assignments(self, method: AssignmentMethod = AssignmentMethod.HUNGARIAN):
         self.assingment_manager.create_assignment(
             agents=self.get_assignment_agents(),
             tasks=self.get_assignment_tasks(),
@@ -139,7 +137,8 @@ def main():
     env.spawn_agents(n=3)
     env.spawn_tasks(n=5)
     # print(env.get_assignment_agents())
-    print(env.get_assignment_tasks())
+    print(type(env.get_assignment_tasks()))
+    env.get_assignment_agents()
     #print(env.getObjectsByID(id='FRODO', regex=True))  # get the agent with the ID 'frodo1v'
     
     # print(env.getSample())

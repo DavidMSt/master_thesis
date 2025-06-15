@@ -5,6 +5,7 @@ from extensions.simulation.examples.frodo.example_frodo import FRODO_TestAgent
 import extensions.simulation.src.core as core
 from extensions.simulation.src.core.spaces import State 
 from typing import Tuple, cast
+import logging
 
 
 class Task(Object): 
@@ -59,6 +60,9 @@ class FrodoAssignmentAgent(FRODO_TestAgent):
         config_dict['x'] = pos[0]
         config_dict['y'] = pos[1]
 
+    @property
+    def cost_vector(self):
+        return self.compute_cost_vector()
 
     def calc_task_cost(self, task_configuration: State) -> np.floating:
          
@@ -80,15 +84,17 @@ class FrodoAssignmentAgent(FRODO_TestAgent):
 
         return np.linalg.norm(agent_xy - task_xy)
     
-    def add_tasks(self, tasks: list[Task]):
+    def add_tasks(self, tasks: tuple[Task,...]) -> None:
         # Add only tasks with unique IDs to the available_tasks list
         existing_ids = {task.id for task in self.available_tasks}
         new_tasks = [task for task in tasks if task.id not in existing_ids]
         self.available_tasks += new_tasks
-    
-    def compute_cost_vector(self)-> list[np.floating]:
-        task_configurations = self.extract_task_configurations(self.available_tasks)
 
+    def compute_cost_vector(self) -> list[np.floating]:
+        if not self.available_tasks:
+            logging.warning(f"Agent {self.agent_id} has no available tasks to compute cost vector.")
+            return []
+        task_configurations = self.extract_task_configurations(self.available_tasks)
         cost_vector = [self.calc_task_cost(task_configuration=configuration) for configuration in task_configurations]
         return cost_vector
 

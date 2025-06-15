@@ -7,8 +7,6 @@ import extensions.simulation.src.core as core
 from task_objects import Task, FrodoAssignmentAgent
 from numpy.typing import NDArray
 
-
-# TODO: Create individual files for the classes and functions
 class AssignmentMethod(Enum):
     HUNGARIAN = auto()  
     RANDOM = auto()     
@@ -17,21 +15,24 @@ class AssignmentMethod(Enum):
 
 class AssignmentManager:
     
-    def __init__(self, tasks: tuple[Task,...], agents: tuple[FrodoAssignmentAgent,...]):
-        self._agents = agents # reference agents and tasks from environment
-        self._tasks = tasks
+    # def __init__(self, tasks: tuple[Task,...], agents: tuple[FrodoAssignmentAgent,...]):
+    def __init__(self, objects: dict[str, Object]):
+        self._objects = objects
+        # self._agents = agents # reference agents and tasks from environment
+        # self._tasks = tasks
         # self.assignment_matrix: NDArray[np.bool] | None = None
         # self.cost_matrix: NDArray[np.float64] | None = None
 
-    @property
+    @property # no setter needed, only read access
     def agents(self) -> tuple[FrodoAssignmentAgent, ...]:
-        return tuple(self._agents)
-    
-    @property
-    def tasks(self) -> tuple[Task, ...]:
-        return tuple(self._tasks)
+        return tuple(obj for obj in self._objects.values() if isinstance(obj, FrodoAssignmentAgent))
 
-    def create_assignment(self, selected_agents: list[FrodoAssignmentAgent], selected_tasks: list[Task], selected_method: AssignmentMethod):
+    @property # no setter needed, only read access
+    def tasks(self) -> tuple[Task, ...]:
+        return tuple(obj for obj in self._objects.values() if isinstance(obj, Task))
+
+    def create_assignment(self, selected_agents: tuple[FrodoAssignmentAgent, ...]| None =None, selected_tasks: tuple[Task, ...]| None = None, selected_method: AssignmentMethod = AssignmentMethod.HUNGARIAN) -> NDArray[np.bool]:
+        # if none specified
         if selected_agents is None:
             selected_agents = self.agents
         if selected_tasks is None:
@@ -57,7 +58,7 @@ class AssignmentManager:
         else:
             raise NotImplementedError(f"Unknown assignment method: {selected_method}. Available methods are: {[m.name for m in AssignmentMethod]}")
     
-    def send_tasks_to_agents(self, tasks: tuple[Task, ...],  selected_agents: tuple[FrodoAssignmentAgent,...]| None = None)-> None:
+    def send_tasks_to_agents(self, tasks: tuple[Task, ...],  selected_agents: tuple[FrodoAssignmentAgent, ...]| None = None)-> None:
         """Send tasks to agents based on the assignment matrix."""
         if selected_agents is None:
             selected_agents = self.agents # All agents are selected if none are specified
@@ -68,14 +69,15 @@ class AssignmentManager:
     @property
     def cost_matrix(self) -> NDArray[np.float64] | None:
         cost_matrix = np.zeros((len(self.agents), len(self.tasks)), dtype=np.float64)
-    
+
         for i, agent in enumerate(self.agents):
+        
             cost_vector_i = agent.cost_vector # get vector for all tasks available to the agent #TODO: Not suited for case of unavailable tasks
             cost_matrix[i, :] = cost_vector_i
 
         return cost_matrix
 
-    def centralized_hungarian(self, agents: list[FrodoAssignmentAgent], tasks: list[Task]) -> NDArray[np.bool]:
+    def centralized_hungarian(self, agents: tuple[FrodoAssignmentAgent, ...], tasks: tuple[Task, ...]) -> NDArray[np.bool]:
         assignment_matrix = np.zeros((len(agents), len(tasks)), dtype=bool)
         cost_matrix = self.cost_matrix
         print("this is the cost matrix", cost_matrix)
@@ -83,6 +85,7 @@ class AssignmentManager:
         assignment_matrix[row_ind, col_ind] = True
         assignment_matrix = assignment_matrix.astype(bool)
         assignment_matrix = assignment_matrix.astype(np.bool_)
+        print(assignment_matrix)
         return assignment_matrix
         
 
@@ -100,7 +103,7 @@ class AssignmentManager:
 
     def send_assignment(self, agent: FrodoAssignmentAgent, task: Task):
         # Give agent centralized computed assignment
-        ...
+        agent.assign_task(task)
 
 # environment.py
 class TaskEnvironment(FrodoEnvironment):
@@ -108,7 +111,9 @@ class TaskEnvironment(FrodoEnvironment):
         super().__init__(*args, **kwargs)
         self.x_lim = x_lim # set the x limits of the environment (currently only for sampling purposes) TODO: can i use exsiting environment methods?
         self.y_lim = y_lim
-        self.assingment_manager = AssignmentManager(agents=self._agents, tasks=self._tasks) # create an instance of the assignment manager to handle task assignments
+        self.agents_list = [] # list to store agents TODO: Remove this and get the information from the environment 
+        self.tasks_list = [] # list to store tasks
+        self.assingment_manager = AssignmentManager(objects=self.objects) # create an instance of the assignment manager to handle task assignments
 
     @property
     def _agents(self) -> tuple[FrodoAssignmentAgent, ...]:
@@ -160,17 +165,11 @@ class TaskEnvironment(FrodoEnvironment):
 
     ##### Get assignment objects #####
 
-    def get_assignment_agents(self) -> list:
-        agents = self.getObjectsByID(id="", regex=True) # is there a btetter 
-        task_agents = [a for a in agents if getattr(a, 'is_task_agent', False)]
+    def get_assignment_agents(self) -> list[FrodoAssignmentAgent]:
+        return [obj for obj in self.objects.values() if isinstance(obj, FrodoAssignmentAgent)]
 
-        return task_agents if task_agents else []
-
-    def get_assignment_tasks(self) -> list:
-        tasks = self.getObjectsByID(id = "", regex=True)
-        task_assignable = [a for a in tasks if getattr(a, 'is_assignable', False)]
-
-        return task_assignable if task_assignable else []
+    def get_assignment_tasks(self) -> list[Task]:
+        return [obj for obj in self.objects.values() if isinstance(obj, Task)]
     
     ##### Get positions of agents and tasks - not used for computation #####
 
@@ -184,13 +183,6 @@ class TaskEnvironment(FrodoEnvironment):
         tasks = self.get_assignment_tasks()
         return [task.position for task in tasks]
 
-    def create_assignments(self, method: AssignmentMethod = AssignmentMethod.HUNGARIAN):
-        self.assingment_manager.create_assignment(
-            selected_agents=self.get_assignment_agents(),
-            selected_tasks=self.get_assignment_tasks(),
-            selected_method=method
-        )
-
     def create_groundtruth_samples(self):
         """_summary_
         Create ground truth samples that can be used for training the GNN
@@ -200,7 +192,7 @@ class TaskEnvironment(FrodoEnvironment):
 
 if __name__ == "__main__":
     env = TaskEnvironment(x_lim= 3.0, y_lim=3.0, Ts=0.1, run_mode='rt') # create the environment for the agents
-    env.spawn_agents(n=3)
+    env.spawn_agents(n=5)
     env.spawn_tasks(n=5)
     env.assign_tasks()  # Assign tasks to agents using the assignment manager
 

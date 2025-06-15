@@ -10,8 +10,10 @@ import logging
 
 class Task(Object): 
     def __init__(self, id, position: tuple[float, float],space= core.spaces.Space2D(), is_assignable = True):
-        self.space = space # quick fix 
-        super().__init__(id=id, space = space)  # No specific space needed for tasks
+        self.space = space # quick fix TODO: FIx this, currently needed since space is referenced before officially set. 
+        
+        super().__init__(object_id=id, space = space)  # No specific space needed for tasks
+        
         self.position = position
         self.assigned = False
         self.is_assignable = is_assignable
@@ -107,13 +109,17 @@ class FrodoAssignmentAgent(FRODO_TestAgent):
             configurations.append(task.configuration)
         return configurations
     
+    def assign_task(self, task: Task)-> None:
+        self.assigned_tasks.append(task)
+    
 if __name__ == "__main__":
     # Example usage
-    agent = FrodoAssignmentAgent(Ts=0.1, agent_id= "agent1")
+    agent = FrodoAssignmentAgent(Ts=0.1, agent_id= "assignment_agent1")
     task1 = Task(id="task1", position=(1.0, 2.0))
     task2 = Task(id="task2", position=(-1.0, 5.0))
     agent.position = (4.0, 1.0)
-    agent.add_tasks([task1, task2])
+    agent.add_tasks((task1, task2))
     cost_vector = agent.compute_cost_vector()
     print(f"Cost vector for available tasks: {cost_vector}")
     print("agent position: ", agent.position)
+    print('ids: ', task1.id, ' agent id: ', agent.agent_id)

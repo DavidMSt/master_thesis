@@ -3,10 +3,12 @@ import numpy as np
 from extensions.simulation.src.core.environment import Object
 from extensions.simulation.examples.frodo.example_frodo import FRODO_TestAgent
 import extensions.simulation.src.core as core
-from extensions.simulation.src.core.spaces import State 
+from extensions.simulation.src.core.spaces import Space, State 
 from typing import Tuple, cast
 import logging
+from abc import ABC, abstractmethod
 
+# ----------------------------- Task Classes -----------------------------
 
 class Task(Object): 
     def __init__(self, id, position: tuple[float, float],space= core.spaces.Space2D(), is_assignable = True):
@@ -36,14 +38,36 @@ class Task(Object):
 
         self.configuration = pos
 
-class FrodoAssignmentAgent(FRODO_TestAgent):
-    def __init__(self, Ts, agent_id, is_task_agent=True):
-        super().__init__(agent_id=agent_id, Ts=Ts)
+# ----------------------------- Agent Classes ----------------------------- 
+
+class AssignmentAgentBase():
+    agent_id: str = ""  # Unique identifier for the agent
+
+    def __init__(self, is_task_agent=True):
+        
         self.is_task_agent = is_task_agent  # flag to indicate if the agent is a task assignment agent
         self.available_tasks = []
         self.assigned_tasks = [] # TODO: remove this attribute if not needed
         # TODO: Use metric, e.g. dubins distance which accounts for turning radius
         self.cost_function = self.euclidean_distance_cost  # set the cost function
+
+    @property
+    @abstractmethod
+    def state(self) -> State | None:
+        """
+        Abstract property to get the state of the agent.
+        Should be implemented in subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement this method.")
+    
+    @property
+    @abstractmethod
+    def configuration(self) -> State | None:
+        """
+        Abstract property to get the configuration of the agent.
+        Should be implemented in subclasses.
+        """
+        raise NotImplementedError("Subclasses must implement this method.")
 
     @property
     def position(self) -> tuple[float, float]:
@@ -111,6 +135,14 @@ class FrodoAssignmentAgent(FRODO_TestAgent):
     
     def assign_task(self, task: Task)-> None:
         self.assigned_tasks.append(task)
+
+class FrodoAssignmentAgent(FRODO_TestAgent, AssignmentAgentBase):
+    def __init__(self, Ts: float, agent_id: str, is_task_agent=True):
+        FRODO_TestAgent.__init__(self, agent_id=agent_id, Ts=Ts)
+        AssignmentAgentBase.__init__(self, is_task_agent=is_task_agent)
+        
+
+   
     
 if __name__ == "__main__":
     # Example usage

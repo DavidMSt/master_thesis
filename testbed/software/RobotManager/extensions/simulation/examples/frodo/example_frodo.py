@@ -54,6 +54,7 @@ class FRODO_TestAgent(FRODO_DynamicAgent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+
         self.logger = Logger(self.agent_id)
 
         core.scheduling.Action(action_id=FRODO_ENVIRONMENT_ACTIONS.MEASUREMENT,
@@ -61,6 +62,7 @@ class FRODO_TestAgent(FRODO_DynamicAgent):
                                function=self.action_measurement,
                                priority=1)
 
+        # this prints frodos position and orientation
         self.scheduling.actions[BASE_ENVIRONMENT_ACTIONS.OUTPUT].addAction(self.print_state)
 
         self.input = [1, 1]
@@ -71,8 +73,8 @@ class FRODO_TestAgent(FRODO_DynamicAgent):
     def print_state(self):
         self.logger.info(f"state: {self.configuration}")
 
-
 def main():
+
     Ts = 1
     env = FrodoEnvironment(Ts=Ts, run_mode='rt')
 
@@ -80,8 +82,12 @@ def main():
     env.addObject(fr1)
 
     env.init()
+    fr1.setPosition(3,3)
+    print(fr1.getPosition())
     env.start(steps=10)
-
+  
 
 if __name__ == '__main__':
+
     main()
+

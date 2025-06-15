@@ -182,18 +182,40 @@ class TaskEnvironment(FrodoEnvironment):
         """Get the positions of all tasks in the environment."""
         tasks = self.get_assignment_tasks()
         return [task.position for task in tasks]
+    
+    def clear_objects(self):
+        """Clear all objects in the environment."""
+        for obj in list(self.objects.values()):
+            self.removeObject(obj)
+        self.assingment_manager = AssignmentManager(objects=self.objects)
 
-    def create_groundtruth_samples(self):
-        """_summary_
-        Create ground truth samples that can be used for training the GNN
-        """
-        ... 
+    def collect_assignment_samples(self, n_samples: int, n:int = 5) -> list[dict]:
+        samples = []
+
+        for _ in range(n_samples):
+            self.clear_objects()
+            self.spawn_agents(n=5, positions=None)  # random or fixed
+            self.spawn_tasks(n=5, positions=None)
+
+            assignment = self.assingment_manager.create_assignment(selected_method=AssignmentMethod.HUNGARIAN)
+
+            sample = {
+                "agent_positions": self.get_agent_positions(),
+                "task_positions": self.get_task_positions(),
+                "assignment": assignment.tolist()
+            }
+            samples.append(sample)
+
+        return samples
 
 
 if __name__ == "__main__":
     env = TaskEnvironment(x_lim= 3.0, y_lim=3.0, Ts=0.1, run_mode='rt') # create the environment for the agents
     env.spawn_agents(n=5)
     env.spawn_tasks(n=5)
+    print(env.get_agent_positions())  # Get agent positions before assignment
     env.assign_tasks()  # Assign tasks to agents using the assignment manager
+    env.clear_objects()  # Clear objects after assignment
+    print(env.get_agent_positions())  # Get agent positions
 
     
